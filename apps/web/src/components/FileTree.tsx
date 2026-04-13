@@ -1,15 +1,27 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { FileTreeItem, TreeNode } from "./FileTreeItem";
+import { useRouter } from "next/navigation";
+import { FileTreeItem, TreeNode, TreeItem } from "./FileTreeItem";
 
 export function FileTree({ vaultId }: { vaultId: string }) {
+  const router = useRouter();
   const [root, setRoot] = useState<TreeNode | null>(null);
+  const [items, setItems] = useState<TreeItem[]>([]);
 
   const reload = useCallback(async () => {
     const res = await fetch(`/api/vaults/${vaultId}/tree`);
     const data = await res.json();
     setRoot(data.root);
+    if (Array.isArray(data.items)) {
+      setItems(data.items as TreeItem[]);
+    } else if (Array.isArray(data.notes)) {
+      setItems(
+        (data.notes as Array<{ id: string; title: string; folderId: string | null }>).map(
+          (n) => ({ id: n.id, title: n.title, kind: "note" as const, folderId: n.folderId }),
+        ),
+      );
+    }
   }, [vaultId]);
 
   useEffect(() => { reload(); }, [reload]);
@@ -35,7 +47,33 @@ export function FileTree({ vaultId }: { vaultId: string }) {
     });
     const data = await res.json();
     await reload();
-    if (data.note) window.location.href = `/vault/${vaultId}/note/${data.note.id}`;
+    if (data.note) router.push(`/vault/${vaultId}/note/${data.note.id}`);
+  }
+
+  async function createDrawio(folderId: string) {
+    const title = window.prompt("Diagram title?", "Untitled diagram");
+    if (!title) return;
+    const res = await fetch("/api/diagrams", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ vaultId, folderId, kind: "DRAWIO", title }),
+    });
+    const data = await res.json();
+    await reload();
+    if (data.id) router.push(`/vault/${vaultId}/diagram/${data.id}`);
+  }
+
+  async function createBpmn(folderId: string) {
+    const title = window.prompt("Process title?", "Untitled process");
+    if (!title) return;
+    const res = await fetch("/api/diagrams", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ vaultId, folderId, kind: "BPMN", title }),
+    });
+    const data = await res.json();
+    await reload();
+    if (data.id) router.push(`/vault/${vaultId}/diagram/${data.id}`);
   }
 
   async function renameFolder(id: string, current: string) {
@@ -78,8 +116,11 @@ export function FileTree({ vaultId }: { vaultId: string }) {
       <FileTreeItem
         vaultId={vaultId}
         node={root}
+        items={items}
         onCreateFolder={createFolder}
         onCreateNote={createNote}
+        onCreateDrawio={createDrawio}
+        onCreateBpmn={createBpmn}
         onRenameFolder={renameFolder}
         onDeleteFolder={deleteFolder}
         onDropInto={dropInto}
