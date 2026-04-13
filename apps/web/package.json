@@ -19,6 +19,7 @@
     "@km/worker": "workspace:^",
     "@prisma/client": "5.20.0",
     "bcryptjs": "2.4.3",
+    "jsonwebtoken": "^9.0.3",
     "nanoid": "^5.0.0",
     "next": "14.2.15",
     "next-auth": "4.24.10",
@@ -30,6 +31,7 @@
   "devDependencies": {
     "@playwright/test": "1.47.2",
     "@types/bcryptjs": "2.4.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/react": "18.3.11",
     "@types/react-dom": "18.3.0",
     "dotenv-cli": "7.4.2",
