@@ -13,7 +13,7 @@ describe("parseSseChunk", () => {
       'event: text\ndata: {"type":"text","delta":"x"}\n\n';
     const events = parseSseChunk(raw);
     expect(events).toHaveLength(2);
-    expect(events[0].event).toBe("ready");
+    expect(events[0]?.event).toBe("ready");
   });
 
   it("ignores trailing partials", () => {

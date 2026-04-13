@@ -1,4 +1,5 @@
 import { prisma } from "@km/db";
+import type { AiTool } from "@km/ai";
 import {
   ALL_TOOLS,
   AiBudgetExceededError,
@@ -85,7 +86,7 @@ export async function POST(req: Request) {
       try {
         totalUsage = await runChat({
           provider,
-          tools: ALL_TOOLS,
+          tools: ALL_TOOLS as AiTool[],
           systemPrompt: SYSTEM_PROMPT,
           history,
           ctx: { userId, vaultId: conversation.vaultId, prisma },
@@ -115,7 +116,7 @@ export async function POST(req: Request) {
             data: {
               conversationId: conversation.id,
               role: "ASSISTANT",
-              content: collected,
+              content: collected as never,
               inputTokens: totalUsage.inputTokens,
               outputTokens: totalUsage.outputTokens,
               cachedTokens: totalUsage.cachedTokens,
