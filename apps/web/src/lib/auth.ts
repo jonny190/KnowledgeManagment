@@ -15,7 +15,7 @@ function requireEnv(name: string): string {
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "database" },
+  session: { strategy: "jwt" },
   secret: requireEnv("NEXTAUTH_SECRET"),
   pages: {
     signIn: "/login",
@@ -47,9 +47,16 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async session({ session, user }) {
-      if (session.user && user) {
-        (session.user as { id?: string }).id = user.id;
+    async jwt({ token, user }) {
+      // On first sign-in, user is available. Persist the id to the token.
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user && token.id) {
+        (session.user as { id?: string }).id = token.id as string;
       }
       return session;
     },

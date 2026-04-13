@@ -1,12 +1,10 @@
 "use client";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 
 type Mode = "login" | "signup";
 
 export function AuthForm({ mode }: { mode: Mode }) {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -29,16 +27,40 @@ export function AuthForm({ mode }: { mode: Mode }) {
           throw new Error(data.error ?? "Signup failed");
         }
       }
-      const signInResult = await signIn("credentials", {
+
+      // Fetch the current CSRF token immediately before posting credentials so
+      // that the token and cookie are guaranteed to be in sync — no concurrent
+      // fetch can slip in between these two sequential awaits.
+      const csrfRes = await fetch("/api/auth/csrf");
+      const { csrfToken } = (await csrfRes.json()) as { csrfToken: string };
+
+      const body = new URLSearchParams({
         email,
         password,
-        redirect: false,
+        csrfToken,
+        json: "true",
+        redirect: "false",
+        callbackUrl: "/",
       });
-      if (!signInResult || signInResult.error) {
-        throw new Error(signInResult?.error ?? "Sign in failed");
+
+      const res = await fetch("/api/auth/callback/credentials", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: body.toString(),
+      });
+
+      if (!res.ok) {
+        throw new Error("Sign in failed");
       }
-      router.push("/");
-      router.refresh();
+
+      const data = (await res.json()) as { url?: string };
+
+      // NextAuth returns the signIn page URL when credentials are rejected.
+      if (!data.url || new URL(data.url).pathname !== "/") {
+        throw new Error("Invalid email or password");
+      }
+
+      window.location.href = "/";
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
