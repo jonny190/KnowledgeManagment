@@ -12,3 +12,27 @@ Postgres, managed by Prisma in `packages/db`. Mirrors the foundation spec.
 - ExportJob: id, vaultId, status (PENDING, RUNNING, COMPLETED, FAILED), startedAt, finishedAt, archivePath, errorMessage, requestedByUserId. Created by the web API, consumed by the worker.
 
 Authorisation goes through a single helper `assertCanAccessVault(userId, vaultId, requiredRole)` exported from `apps/web/src/lib/auth/access.ts`. Every route and server action that touches vault-scoped data calls it.
+
+## NoteDoc
+
+One row per note that has ever been opened in realtime. Stores the merged Yjs document state as Bytes. Deleted when the note is deleted (via `onDelete: Cascade`). Not deleted when the room empties; the CRDT state is the source of truth for future reconnects.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| noteId | String (PK) | FK to Note |
+| state | Bytes | Yjs update payload |
+| clock | Int | Monotonic counter, incremented on each store |
+| updatedAt | DateTime | Auto |
+
+## RealtimeGrant
+
+One row per issued realtime JWT. Enables explicit revocation without waiting for token expiry.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| jti | String (PK) | Nanoid, also claim in the JWT |
+| userId | String | The issuing user |
+| noteId | String | Scope of the grant |
+| expiresAt | DateTime | Matches JWT exp |
+| revokedAt | DateTime? | Set to block future connections |
+| createdAt | DateTime | Auto |
