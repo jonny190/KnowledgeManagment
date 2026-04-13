@@ -47,6 +47,7 @@ export async function openSse(opts: OpenSseOptions): Promise<void> {
   const reader = res.body.getReader();
   const dec = new TextDecoder();
   let buffer = "";
+  // eslint-disable-next-line no-constant-condition
   while (true) {
     const { value, done } = await reader.read();
     if (done) break;
