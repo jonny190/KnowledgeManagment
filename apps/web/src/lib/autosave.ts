@@ -29,8 +29,7 @@ export function useDebouncedAutosave(
 
   useEffect(() => {
     schedule(value);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
+  }, [value]); // eslint-disable-line -- schedule is stable (useCallback with [delayMs])
 
   useEffect(() => {
     return () => {

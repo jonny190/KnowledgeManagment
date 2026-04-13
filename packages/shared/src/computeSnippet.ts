@@ -10,7 +10,6 @@ export function computeSnippet(content: string, title: string): string {
   if (!m || m.index === undefined) return '';
 
   const start = m.index;
-  const end = start + m[0].length;
   const matchLen = m[0].length;
   const sideContext = Math.floor((WINDOW - matchLen) / 2);
   const from = Math.max(0, start - sideContext);
