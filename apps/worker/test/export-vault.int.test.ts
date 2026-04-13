@@ -12,6 +12,7 @@ async function resetDb() {
     prisma.link.deleteMany(),
     prisma.attachment.deleteMany(),
     prisma.note.deleteMany(),
+    prisma.diagram.deleteMany(),
     prisma.folder.deleteMany(),
     prisma.exportJob.deleteMany(),
     prisma.vault.deleteMany(),
@@ -143,5 +144,64 @@ describe("runExport integration", () => {
     const updated = await prisma.exportJob.findUnique({ where: { id: job.id } });
     expect(updated?.status).toBe("FAILED");
     expect(updated?.errorMessage).toBeTruthy();
+  });
+
+  it("writes drawio and bpmn files into the archive", async () => {
+    const user = await prisma.user.create({ data: { email: "diagrams@x.test" } });
+    const vault = await prisma.vault.create({
+      data: { ownerType: "USER", ownerId: user.id, name: "V" },
+    });
+    await prisma.folder.create({
+      data: { vaultId: vault.id, name: "", path: "" },
+    });
+
+    await prisma.diagram.create({
+      data: {
+        vaultId: vault.id,
+        kind: "DRAWIO",
+        title: "Flow",
+        slug: "flow",
+        xml: "<mxfile id=\"x\"/>",
+        createdById: user.id,
+        updatedById: user.id,
+      },
+    });
+    await prisma.diagram.create({
+      data: {
+        vaultId: vault.id,
+        kind: "BPMN",
+        title: "Proc",
+        slug: "proc",
+        xml: "<bpmn/>",
+        createdById: user.id,
+        updatedById: user.id,
+      },
+    });
+
+    const dataDir = await mkdtemp(join(tmpdir(), "data-diag-"));
+    testDataDirs.push(dataDir);
+
+    const job = await prisma.exportJob.create({
+      data: {
+        vaultId: vault.id,
+        status: "PENDING",
+        requestedByUserId: user.id,
+      },
+    });
+
+    const archivePath = await runExport(
+      { vaultId: vault.id, requestedByUserId: user.id, jobId: job.id },
+      { dataDir },
+    );
+
+    const extract = await mkdtemp(join(tmpdir(), "extract-diag-"));
+    testDataDirs.push(extract);
+    execFileSync("unzip", ["-q", archivePath, "-d", extract]);
+
+    const flowContent = await readFile(join(extract, "flow.drawio"), "utf8");
+    expect(flowContent).toBe("<mxfile id=\"x\"/>");
+
+    const procContent = await readFile(join(extract, "proc.bpmn"), "utf8");
+    expect(procContent).toBe("<bpmn/>");
   });
 });
