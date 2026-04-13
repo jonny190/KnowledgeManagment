@@ -8,13 +8,13 @@
     "start": "next start -p 3000",
     "lint": "next lint --max-warnings=0",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "dotenv -e ../../.env -- vitest run",
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "2.7.2",
     "@km/db": "workspace:*",
     "@km/shared": "workspace:*",
-    "@auth/prisma-adapter": "2.7.2",
     "@prisma/client": "5.20.0",
     "bcryptjs": "2.4.3",
     "next": "14.2.15",
@@ -28,6 +28,7 @@
     "@types/bcryptjs": "2.4.6",
     "@types/react": "18.3.11",
     "@types/react-dom": "18.3.0",
+    "dotenv-cli": "7.4.2",
     "eslint-config-next": "14.2.15",
     "typescript": "5.5.4",
     "vitest": "2.1.2"
