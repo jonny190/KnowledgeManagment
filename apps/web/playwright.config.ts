@@ -21,6 +21,8 @@ export default defineConfig({
       env: {
         REALTIME_JWT_SECRET: process.env.REALTIME_JWT_SECRET ?? "e2e-realtime-secret",
         NEXT_PUBLIC_REALTIME_URL: process.env.NEXT_PUBLIC_REALTIME_URL ?? "ws://localhost:3001",
+        AI_PROVIDER: "stub",
+        ANTHROPIC_API_KEY: "stub",
       },
     },
     {
