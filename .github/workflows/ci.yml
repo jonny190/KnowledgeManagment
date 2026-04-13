@@ -76,3 +76,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @km/db prisma migrate deploy
       - run: pnpm test:integration
+      - name: Realtime integration tests
+        env:
+          REALTIME_JWT_SECRET: ci-realtime-secret
+        run: pnpm --filter @km/realtime test:integration
