@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: km-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: km
+      POSTGRES_PASSWORD: km
+      POSTGRES_DB: km
+    ports:
+      - "5432:5432"
+    volumes:
+      - km-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U km -d km"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  km-postgres-data:
