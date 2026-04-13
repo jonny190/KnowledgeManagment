@@ -8,3 +8,5 @@ export {
   isSameOrigin,
 } from './drawio/postMessageBridge';
 export type { DrawioEvent } from './drawio/postMessageBridge';
+export { DrawioFrame } from './drawio/DrawioFrame';
+export type { DrawioFrameProps } from './drawio/DrawioFrame';
