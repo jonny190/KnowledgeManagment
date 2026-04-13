@@ -1,11 +1,13 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { NoteEditor } from '@km/editor';
-import { useDebouncedAutosave } from '@/lib/autosave';
+import { NoteEditor, collabExtension } from '@km/editor';
 import { BacklinksPanel } from '@/components/BacklinksPanel';
 import { CreateNoteDialog } from '@/components/CreateNoteDialog';
+import { useCollabSession } from '@/components/CollabSession';
+import { ActiveUsers } from '@/components/ActiveUsers';
 
 interface NotePageProps {
   params: { vaultId: string; noteId: string };
@@ -20,8 +22,8 @@ interface NoteDto {
 
 export default function NotePage({ params }: NotePageProps) {
   const router = useRouter();
+  const { data: sessionData } = useSession();
   const [note, setNote] = useState<NoteDto | null>(null);
-  const [content, setContent] = useState('');
   const [titleMap, setTitleMap] = useState<Map<string, string>>(new Map());
   const [dialogTitle, setDialogTitle] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -29,10 +31,7 @@ export default function NotePage({ params }: NotePageProps) {
   useEffect(() => {
     fetch(`/api/notes/${params.noteId}`)
       .then((r) => r.json())
-      .then((body) => {
-        setNote(body.note);
-        setContent(body.note.content);
-      });
+      .then((body) => setNote(body.note));
   }, [params.noteId]);
 
   useEffect(() => {
@@ -52,19 +51,12 @@ export default function NotePage({ params }: NotePageProps) {
       });
   }, [note]);
 
-  const save = useCallback(
-    async (value: string) => {
-      await fetch(`/api/notes/${params.noteId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: value }),
-      });
-      setReloadKey((k) => k + 1);
-    },
-    [params.noteId],
-  );
+  const user = sessionData?.user as { id?: string; name?: string | null; email?: string | null } | undefined;
+  const collabUser = user?.id
+    ? { id: user.id, name: user.name || user.email || "User" }
+    : null;
 
-  const { saving } = useDebouncedAutosave(content, 1500, save);
+  const session = useCollabSession(note && collabUser ? params.noteId : "", collabUser ?? { id: "", name: "" });
 
   const resolveTitle = useCallback(
     (title: string) => {
@@ -105,19 +97,25 @@ export default function NotePage({ params }: NotePageProps) {
     [note],
   );
 
-  // NoteEditor uses internal refs for all callbacks, so it is safe to render
-  // without memoizing the element. Re-renders update the refs but do not
-  // recreate the CodeMirror view (which lives in a separate useEffect with []).
-  const editor = note ? (
+  // Reload backlinks when remote changes land via the shared Yjs document.
+  useEffect(() => {
+    if (!session) return;
+    const handler = () => setReloadKey((k) => k + 1);
+    session.ytext.observe(handler);
+    return () => session.ytext.unobserve(handler);
+  }, [session]);
+
+  const editor = note && session ? (
     <NoteEditor
       key={note.id}
-      initialValue={note.content}
-      onChange={setContent}
+      initialValue=""
+      onChange={() => {}}
       onDropFiles={onDropFiles}
       resolveTitle={resolveTitle}
       onNavigate={(id) => router.push(`/vault/${params.vaultId}/note/${id}`)}
       onCreateRequest={(title) => setDialogTitle(title)}
       searchTitles={searchTitles}
+      collab={collabExtension({ ytext: session.ytext, awareness: session.awareness })}
     />
   ) : null;
 
@@ -132,10 +130,16 @@ export default function NotePage({ params }: NotePageProps) {
             borderBottom: '1px solid #d0d7de',
             display: 'flex',
             justifyContent: 'space-between',
+            alignItems: 'center',
           }}
         >
           <h1 style={{ fontSize: '18px', margin: 0 }}>{note.title}</h1>
-          <span style={{ color: '#57606a', fontSize: '12px' }}>{saving ? 'Saving...' : 'Saved'}</span>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <ActiveUsers awareness={session?.awareness ?? null} />
+            <span style={{ color: '#57606a', fontSize: '12px' }}>
+              {session?.status === 'connected' ? 'Live' : session?.status ?? 'Connecting'}
+            </span>
+          </div>
         </header>
         <div style={{ flex: 1, minHeight: 0 }}>{editor}</div>
       </div>

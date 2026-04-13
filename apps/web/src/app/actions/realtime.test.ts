@@ -44,7 +44,7 @@ describe("issueRealtimeToken", () => {
 
     const token = await issueRealtimeToken(note.id);
 
-    const decoded = jwt.verify(token, "test-secret") as any;
+    const decoded = jwt.verify(token, "test-secret") as { sub: string; nid: string; vid: string; role: string; jti: string };
     expect(decoded.sub).toBe(user.id);
     expect(decoded.nid).toBe(note.id);
     expect(decoded.vid).toBe(vault.id);
