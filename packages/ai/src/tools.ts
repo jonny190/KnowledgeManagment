@@ -53,7 +53,7 @@ export const searchNotes: AiTool<z.infer<typeof searchNotesArgs>, unknown[]> = {
     return rows.map((r) => ({
       id: r.id,
       title: r.title,
-      snippet: computeSnippet(r.content, args.query, 160),
+      snippet: computeSnippet(r.content, args.query),
     }));
   },
 };
@@ -86,7 +86,7 @@ export const listBacklinks: AiTool<z.infer<typeof listBacklinksArgs>, unknown[]>
       .map((l) => ({
         sourceNoteId: l.sourceNote!.id,
         sourceTitle: l.sourceNote!.title,
-        snippet: computeSnippet(l.sourceNote!.content, target.title, 160),
+        snippet: computeSnippet(l.sourceNote!.content, target.title),
       }));
   },
 };
