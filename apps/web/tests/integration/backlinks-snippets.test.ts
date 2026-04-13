@@ -8,7 +8,6 @@ vi.mock("../../src/lib/session", () => ({
 }));
 
 import { requireUserId } from "../../src/lib/session";
-import { PATCH } from "../../src/app/api/notes/[id]/route";
 import { GET } from "../../src/app/api/notes/[id]/backlinks/route";
 
 describe("GET /api/notes/:id/backlinks - snippets", () => {
@@ -17,6 +16,9 @@ describe("GET /api/notes/:id/backlinks - snippets", () => {
   let targetId: string;
   let source1Id: string;
   let source2Id: string;
+
+  const src1Content = `${"x".repeat(200)} see [[Target]] ${"y".repeat(200)}`;
+  const src2Content = `head before [[Target|alias]] rest`;
 
   beforeEach(async () => {
     await resetDb();
@@ -32,29 +34,23 @@ describe("GET /api/notes/:id/backlinks - snippets", () => {
       data: { vaultId, title: "Target", slug: "target", content: "", contentUpdatedAt: new Date(), createdById: userId, updatedById: userId },
     });
     const source1 = await prisma.note.create({
-      data: { vaultId, title: "Src1", slug: "src1", content: "", contentUpdatedAt: new Date(), createdById: userId, updatedById: userId },
+      data: { vaultId, title: "Src1", slug: "src1", content: src1Content, contentUpdatedAt: new Date(), createdById: userId, updatedById: userId },
     });
     const source2 = await prisma.note.create({
-      data: { vaultId, title: "Src2", slug: "src2", content: "", contentUpdatedAt: new Date(), createdById: userId, updatedById: userId },
+      data: { vaultId, title: "Src2", slug: "src2", content: src2Content, contentUpdatedAt: new Date(), createdById: userId, updatedById: userId },
     });
 
     targetId = target.id;
     source1Id = source1.id;
     source2Id = source2.id;
 
-    async function patch(id: string, content: string) {
-      return PATCH(
-        new Request(`http://x/api/notes/${id}`, {
-          method: "PATCH",
-          body: JSON.stringify({ content }),
-          headers: { "Content-Type": "application/json" },
-        }),
-        { params: { id } },
-      );
-    }
-
-    await patch(source1Id, `${"x".repeat(200)} see [[Target]] ${"y".repeat(200)}`);
-    await patch(source2Id, `head before [[Target|alias]] rest`);
+    // Seed link rows directly (content is owned by the realtime pipeline; PATCH no longer writes links)
+    await prisma.link.createMany({
+      data: [
+        { sourceNoteId: source1Id, targetNoteId: targetId, targetTitle: "Target", resolved: true },
+        { sourceNoteId: source2Id, targetNoteId: targetId, targetTitle: "Target", resolved: true },
+      ],
+    });
   });
 
   it("returns each source with a snippet", async () => {

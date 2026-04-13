@@ -76,6 +76,23 @@ Set `WEB_IMAGE` and `WORKER_IMAGE` to the previous tag in the Coolify env and re
 
 Back up the `pgdata` and `appdata` volumes on a nightly schedule through Coolify's backup integration or a host-level `restic` cron. The nightly export job also writes a fresh markdown zip of every vault to `/data/exports/`, giving a secondary human-readable backup format.
 
+## Realtime service
+
+The `@km/realtime` app runs Hocuspocus on port 3001. Deploy it as a separate Coolify service using `infra/docker/Dockerfile.realtime`.
+
+Required environment variables:
+
+- DATABASE_URL (same value as web and worker)
+- REALTIME_JWT_SECRET (distinct from NEXTAUTH_SECRET; generate with openssl rand -base64 32)
+- REALTIME_PORT=3001
+
+The web service additionally needs:
+
+- REALTIME_JWT_SECRET (same value as realtime)
+- NEXT_PUBLIC_REALTIME_URL (the public WebSocket URL the browser will open, e.g. wss://knowledge.example.com/yjs)
+
+Cloudflare Proxy: the realtime route must have WebSockets enabled in the Cloudflare dashboard under Network settings. Per the project convention, the upstream between Cloudflare and Coolify is HTTP; the WebSocket upgrade travels over the same connection.
+
 ## Troubleshooting
 
 - `worker` restarts in a loop: check `DATABASE_URL` reachability and that the pg-boss schema has been created. pg-boss provisions its own schema on first run; if the Postgres user lacks `CREATE` permission, grant it.

@@ -69,7 +69,7 @@ describe("/api/notes/:id", () => {
     expect(body.note.content).toBe("hello");
   });
 
-  it("PATCH updates content and stamps updatedById", async () => {
+  it("PATCH updates title and stamps updatedById; ignores content (owned by realtime)", async () => {
     const { user, vault } = await createUser();
     const n = await prisma.note.create({
       data: { vaultId: vault.id, title: "T", slug: "t", content: "a", contentUpdatedAt: new Date(), createdById: user.id, updatedById: user.id },
@@ -79,13 +79,14 @@ describe("/api/notes/:id", () => {
       new Request(`http://t/api/notes/${n.id}`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ content: "b" }),
+        body: JSON.stringify({ title: "New Title", content: "b" }),
       }),
       { params: { id: n.id } }
     );
     expect(res.status).toBe(200);
     const refreshed = await prisma.note.findUniqueOrThrow({ where: { id: n.id } });
-    expect(refreshed.content).toBe("b");
+    expect(refreshed.title).toBe("New Title");
+    expect(refreshed.content).toBe("a");
     expect(refreshed.updatedById).toBe(user.id);
   });
 

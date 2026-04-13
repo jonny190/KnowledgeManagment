@@ -29,6 +29,8 @@ jobs:
       DATABASE_URL: postgres://km:km@localhost:5432/km_e2e
       NEXTAUTH_SECRET: e2e-secret
       NEXTAUTH_URL: http://localhost:3000
+      REALTIME_JWT_SECRET: e2e-realtime-secret
+      NEXT_PUBLIC_REALTIME_URL: ws://localhost:3001
       DATA_DIR: /tmp/km-e2e
     steps:
       - uses: actions/checkout@v4

@@ -171,6 +171,7 @@ model Note {
 
   outgoingLinks Link[] @relation("SourceNote")
   incomingLinks Link[] @relation("TargetNote")
+  doc           NoteDoc?
 
   @@unique([vaultId, slug])
   @@index([vaultId])
@@ -231,4 +232,26 @@ model ExportJob {
 
   @@index([vaultId])
   @@index([status])
+}
+
+model NoteDoc {
+  noteId    String   @id
+  state     Bytes
+  clock     Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  note Note @relation(fields: [noteId], references: [id], onDelete: Cascade)
+}
+
+model RealtimeGrant {
+  jti        String    @id
+  userId     String
+  noteId     String
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId])
+  @@index([noteId])
+  @@index([expiresAt])
 }

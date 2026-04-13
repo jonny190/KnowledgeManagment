@@ -17,6 +17,7 @@ export interface NoteEditorProps {
   onNavigate: WikiLinkContext['onNavigate'];
   onCreateRequest: WikiLinkContext['onCreateRequest'];
   searchTitles: (q: string) => Promise<WikiSearchResult[]>;
+  collab?: import("@codemirror/state").Extension;
 }
 
 export function NoteEditor(props: NoteEditorProps) {
@@ -81,6 +82,7 @@ export function NoteEditor(props: NoteEditorProps) {
         listener,
         dropHandler,
         EditorView.lineWrapping,
+        ...(props.collab ? [props.collab] : []),
       ],
     });
 
