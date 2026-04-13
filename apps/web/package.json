@@ -17,6 +17,7 @@
     "@anthropic-ai/sdk": "^0.30.0",
     "@km/ai": "workspace:*",
     "@km/db": "workspace:*",
+    "@km/diagrams": "workspace:*",
     "@km/editor": "workspace:*",
     "@km/shared": "workspace:*",
     "@km/worker": "workspace:^",
