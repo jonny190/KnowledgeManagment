@@ -24,8 +24,16 @@ export function NoteEditor(props: NoteEditorProps) {
   const viewRef = useRef<EditorView | null>(null);
   const onChangeRef = useRef(props.onChange);
   const onDropRef = useRef(props.onDropFiles);
+  const resolveTitleRef = useRef(props.resolveTitle);
+  const onNavigateRef = useRef(props.onNavigate);
+  const onCreateRequestRef = useRef(props.onCreateRequest);
+  const searchTitlesRef = useRef(props.searchTitles);
   onChangeRef.current = props.onChange;
   onDropRef.current = props.onDropFiles;
+  resolveTitleRef.current = props.resolveTitle;
+  onNavigateRef.current = props.onNavigate;
+  onCreateRequestRef.current = props.onCreateRequest;
+  searchTitlesRef.current = props.searchTitles;
 
   useEffect(() => {
     if (!host.current) return;
@@ -64,11 +72,11 @@ export function NoteEditor(props: NoteEditorProps) {
         baseTheme,
         wikiLinkField,
         wikiLinkExtension({
-          resolveTitle: props.resolveTitle,
-          onNavigate: props.onNavigate,
-          onCreateRequest: props.onCreateRequest,
+          resolveTitle: (title) => resolveTitleRef.current(title),
+          onNavigate: (id) => onNavigateRef.current(id),
+          onCreateRequest: (title) => onCreateRequestRef.current(title),
         }),
-        wikiLinkAutocomplete({ search: props.searchTitles }),
+        wikiLinkAutocomplete({ search: (q) => searchTitlesRef.current(q) }),
         livePreview,
         listener,
         dropHandler,
@@ -84,6 +92,15 @@ export function NoteEditor(props: NoteEditorProps) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // When resolveTitle changes (e.g. titleMap populates), force CodeMirror to redecorate
+  // by dispatching a no-op transaction. The update listener checks viewportChanged which
+  // triggers after any transaction.
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view) return;
+    view.dispatch({});
+  }, [props.resolveTitle]);
 
   return <div ref={host} style={{ height: '100%', width: '100%' }} data-testid="note-editor" />;
 }

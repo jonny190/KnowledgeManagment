@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { NoteEditor } from '@km/editor';
 import { useDebouncedAutosave } from '@/lib/autosave';
@@ -37,10 +37,18 @@ export default function NotePage({ params }: NotePageProps) {
 
   useEffect(() => {
     if (!note) return;
+    type TreeNode = { id: string; name: string; children: TreeNode[]; notes: { id: string; title: string }[] };
+    function collectNotes(node: TreeNode): { id: string; title: string }[] {
+      return [
+        ...node.notes,
+        ...node.children.flatMap(collectNotes),
+      ];
+    }
     fetch(`/api/vaults/${note.vaultId}/tree`)
       .then((r) => r.json())
-      .then((body: { notes: { id: string; title: string }[] }) => {
-        setTitleMap(new Map(body.notes.map((n) => [n.title, n.id])));
+      .then((body: { root: TreeNode }) => {
+        const allNotes = collectNotes(body.root);
+        setTitleMap(new Map(allNotes.map((n) => [n.title, n.id])));
       });
   }, [note]);
 
@@ -97,21 +105,21 @@ export default function NotePage({ params }: NotePageProps) {
     [note],
   );
 
-  const editor = useMemo(() => {
-    if (!note) return null;
-    return (
-      <NoteEditor
-        initialValue={note.content}
-        onChange={setContent}
-        onDropFiles={onDropFiles}
-        resolveTitle={resolveTitle}
-        onNavigate={(id) => router.push(`/vault/${params.vaultId}/note/${id}`)}
-        onCreateRequest={(title) => setDialogTitle(title)}
-        searchTitles={searchTitles}
-      />
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [note?.id]);
+  // NoteEditor uses internal refs for all callbacks, so it is safe to render
+  // without memoizing the element. Re-renders update the refs but do not
+  // recreate the CodeMirror view (which lives in a separate useEffect with []).
+  const editor = note ? (
+    <NoteEditor
+      key={note.id}
+      initialValue={note.content}
+      onChange={setContent}
+      onDropFiles={onDropFiles}
+      resolveTitle={resolveTitle}
+      onNavigate={(id) => router.push(`/vault/${params.vaultId}/note/${id}`)}
+      onCreateRequest={(title) => setDialogTitle(title)}
+      searchTitles={searchTitles}
+    />
+  ) : null;
 
   if (!note) return <div>Loading...</div>;
 

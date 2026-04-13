@@ -45,7 +45,7 @@ export function wikiLinkExtension(ctx: WikiLinkContext) {
           this.decorations = buildDecorations(view, ctx);
         }
         update(u: ViewUpdate) {
-          if (u.docChanged || u.viewportChanged) {
+          if (u.docChanged || u.viewportChanged || u.transactions.length > 0) {
             this.decorations = buildDecorations(u.view, ctx);
           }
         }
