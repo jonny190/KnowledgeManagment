@@ -33,8 +33,8 @@ describe("GET /api/notes/:id/backlinks", () => {
     const body = await res.json();
     expect(res.status).toBe(200);
     expect(body.backlinks).toHaveLength(1);
-    expect(body.backlinks[0].sourceNote.id).toBe(source.id);
-    expect(body.backlinks[0].sourceNote.title).toBe("Source");
+    expect(body.backlinks[0].sourceNoteId).toBe(source.id);
+    expect(body.backlinks[0].sourceTitle).toBe("Source");
   });
 
   it("returns empty list when no links exist", async () => {
