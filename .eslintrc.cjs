@@ -7,5 +7,21 @@ module.exports = {
     "node_modules", "dist", ".next", ".turbo",
     "coverage", "playwright-report", "test-results",
     "packages/db/src/generated"
+  ],
+  overrides: [
+    {
+      files: ["**/*.ts", "**/*.tsx"],
+      parser: "@typescript-eslint/parser",
+      plugins: ["@typescript-eslint"],
+      extends: [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended",
+        "prettier"
+      ],
+      parserOptions: {
+        ecmaVersion: 2022,
+        sourceType: "module"
+      }
+    }
   ]
 };
