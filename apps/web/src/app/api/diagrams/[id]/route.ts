@@ -83,7 +83,8 @@ async function uniqueDiagramSlug(
 ): Promise<string> {
   let slug = base;
   let n = 1;
-  while (true) {
+  // eslint-disable-next-line no-constant-condition
+  for (;;) {
     const existing = await prisma.diagram.findUnique({
       where: { vaultId_slug: { vaultId, slug } },
     });
