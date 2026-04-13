@@ -1,28 +1,9 @@
-# Getting Started
+# Getting started
 
-This guide walks a new user through creating an account and signing in.
+Sign up with email and password, or with your Google or GitHub account. The first time you sign in the platform creates a personal vault for you automatically. That vault is private to you and cannot be shared with other users.
 
-## Creating an account
+From the main screen you can create your first note by clicking New note in the sidebar. Type markdown the way you would in any other editor. The app saves your changes a second or two after you stop typing, and again when you click away from the note.
 
-1. Open the home page.
-2. Choose "Sign up".
-3. Enter your email and a password of at least eight characters. A display name is optional.
-4. Select "Sign up".
+To link to another note, type two opening square brackets and start typing the target note's title. A short list of suggestions appears. Press Enter to insert the link. If the target does not exist yet, pressing Enter offers to create it. Links are preserved exactly in the markdown source, so an export of your vault is a faithful copy you can open in any other markdown tool.
 
-After signup the app signs you in automatically and takes you back to the home page. You now have a personal vault, which is a private space for your notes. Content features are introduced in later phases.
-
-You can also sign up by choosing "Continue with Google" or "Continue with GitHub". The first time you use one of those, the app creates your account and personal vault in one step.
-
-## Logging out
-
-Select "Log out" from the home page when you are signed in. You are returned to the home page as a signed-out visitor.
-
-## Logging back in
-
-1. Open the home page.
-2. Choose "Log in".
-3. Enter the same email and password you used at signup, or pick the OAuth provider you used originally.
-
-## What happens next
-
-Further phases of the product introduce notes, folders, wiki-links, backlinks, attachments, and exports. Those guides are published alongside each phase.
+If you want to share a set of notes with other people, move on to the guide on creating vaults and inviting members.
