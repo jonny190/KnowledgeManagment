@@ -10,11 +10,9 @@ vi.mock("../../src/lib/session", () => ({
 import { requireUserId } from "../../src/lib/session";
 import { PATCH } from "../../src/app/api/notes/[id]/route";
 
-describe("PATCH /api/notes/:id link recomputation", () => {
+describe("PATCH /api/notes/:id (Phase 2: content owned by realtime)", () => {
   let userId: string;
   let vaultId: string;
-  let noteAId: string;
-  let noteBId: string;
   let noteCId: string;
 
   beforeEach(async () => {
@@ -27,18 +25,10 @@ describe("PATCH /api/notes/:id link recomputation", () => {
 
     vi.mocked(requireUserId).mockResolvedValue(userId);
 
-    const noteA = await prisma.note.create({
-      data: { vaultId, title: "Alpha", slug: "alpha", content: "", contentUpdatedAt: new Date(), createdById: userId, updatedById: userId },
-    });
-    const noteB = await prisma.note.create({
-      data: { vaultId, title: "Beta", slug: "beta", content: "", contentUpdatedAt: new Date(), createdById: userId, updatedById: userId },
-    });
     const noteC = await prisma.note.create({
-      data: { vaultId, title: "Source", slug: "source", content: "", contentUpdatedAt: new Date(), createdById: userId, updatedById: userId },
+      data: { vaultId, title: "Source", slug: "source", content: "original", contentUpdatedAt: new Date(), createdById: userId, updatedById: userId },
     });
 
-    noteAId = noteA.id;
-    noteBId = noteB.id;
     noteCId = noteC.id;
   });
 
@@ -53,48 +43,26 @@ describe("PATCH /api/notes/:id link recomputation", () => {
     );
   }
 
-  it("creates resolved link rows for known targets", async () => {
-    const res = await patch(noteCId, { content: "see [[Alpha]] and [[Beta]]" });
+  it("ignores content in the body and keeps the existing content", async () => {
+    const res = await patch(noteCId, { title: "New Title", content: "SHOULD BE IGNORED" });
     expect(res.status).toBe(200);
+    const after = await prisma.note.findUnique({ where: { id: noteCId } });
+    expect(after!.title).toBe("New Title");
+    expect(after!.content).toBe("original");
+  });
+
+  it("updates title without touching content or links", async () => {
+    await patch(noteCId, { title: "Updated" });
+    const after = await prisma.note.findUnique({ where: { id: noteCId } });
+    expect(after!.title).toBe("Updated");
+    expect(after!.content).toBe("original");
     const links = await prisma.link.findMany({ where: { sourceNoteId: noteCId } });
-    expect(links).toHaveLength(2);
-    const titles = links.map((l) => l.targetTitle).sort();
-    expect(titles).toEqual(["Alpha", "Beta"]);
-    for (const l of links) {
-      expect(l.resolved).toBe(true);
-      expect(l.targetNoteId).not.toBeNull();
-    }
+    expect(links).toHaveLength(0);
   });
 
-  it("marks unknown targets as unresolved", async () => {
-    await patch(noteCId, { content: "see [[Ghost]]" });
+  it("does not create link rows even when content with wiki-links is sent", async () => {
+    await patch(noteCId, { content: "see [[Alpha]] and [[Beta]]" });
     const links = await prisma.link.findMany({ where: { sourceNoteId: noteCId } });
-    expect(links).toHaveLength(1);
-    expect(links[0].resolved).toBe(false);
-    expect(links[0].targetNoteId).toBeNull();
-  });
-
-  it("replaces the link set atomically across saves", async () => {
-    await patch(noteCId, { content: "[[Alpha]]" });
-    const first = await prisma.link.findMany({ where: { sourceNoteId: noteCId } });
-    expect(first.map((l) => l.targetTitle)).toEqual(["Alpha"]);
-    await patch(noteCId, { content: "[[Beta]]" });
-    const second = await prisma.link.findMany({ where: { sourceNoteId: noteCId } });
-    expect(second.map((l) => l.targetTitle)).toEqual(["Beta"]);
-  });
-
-  it("leaves no link rows when content has no wiki-links", async () => {
-    await patch(noteCId, { content: "plain text only" });
-    const rows = await prisma.link.findMany({ where: { sourceNoteId: noteCId } });
-    expect(rows).toEqual([]);
-  });
-
-  it("never writes content without writing links in the same transaction", async () => {
-    await prisma.link.deleteMany({ where: { sourceNoteId: noteCId } });
-    await patch(noteCId, { content: "[[Alpha]] body" });
-    const note = await prisma.note.findUnique({ where: { id: noteCId } });
-    const links = await prisma.link.findMany({ where: { sourceNoteId: noteCId } });
-    expect(note?.content).toBe("[[Alpha]] body");
-    expect(links.map((l) => l.targetTitle)).toEqual(["Alpha"]);
+    expect(links).toHaveLength(0);
   });
 });
