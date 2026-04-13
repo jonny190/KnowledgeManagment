@@ -1,0 +1,17 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalEnv": [
+    "DATABASE_URL", "NEXTAUTH_SECRET", "NEXTAUTH_URL",
+    "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET",
+    "GITHUB_CLIENT_ID", "GITHUB_CLIENT_SECRET",
+    "DATA_DIR", "NODE_ENV"
+  ],
+  "tasks": {
+    "build": { "dependsOn": ["^build"], "outputs": [".next/**", "!.next/cache/**", "dist/**"] },
+    "dev": { "cache": false, "persistent": true },
+    "lint": {},
+    "typecheck": { "dependsOn": ["^build"] },
+    "test": { "dependsOn": ["^build"], "outputs": [] },
+    "test:e2e": { "dependsOn": ["^build"], "cache": false, "outputs": [] }
+  }
+}
