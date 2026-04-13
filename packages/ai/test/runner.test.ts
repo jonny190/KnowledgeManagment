@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { runChat } from "../src/runner";
-import type { AiProvider, AiTool } from "../src/types";
+import type { AiProvider, AiProviderRequest, AiToolContext, AiTool } from "../src/types";
+import type { AiSseEvent } from "@km/shared";
 
 const fakeTool: AiTool = {
   name: "echo",
@@ -16,7 +17,11 @@ class ScriptedProvider implements AiProvider {
   name = "scripted";
   model = "m";
   private callCount = 0;
-  async stream(_req: unknown, _ctx: unknown, emit: (e: { type: string; [k: string]: unknown }) => void) {
+  async stream(
+    _req: AiProviderRequest,
+    _ctx: AiToolContext,
+    emit: (event: AiSseEvent) => void,
+  ) {
     this.callCount++;
     if (this.callCount === 1) {
       emit({ type: "tool_use", id: "t1", name: "echo", args: { hi: 1 } });
@@ -31,7 +36,7 @@ describe("runChat", () => {
   it("invokes the tool, feeds the result back, and streams the final text", async () => {
     const events: unknown[] = [];
     const usage = await runChat({
-      provider: new ScriptedProvider() as unknown as AiProvider,
+      provider: new ScriptedProvider(),
       tools: [fakeTool],
       systemPrompt: "sys",
       history: [{ role: "user", content: "hi" }],
@@ -50,14 +55,18 @@ describe("runChat", () => {
     class LoopProvider implements AiProvider {
       name = "loop";
       model = "m";
-      async stream(_req: unknown, _ctx: unknown, emit: (e: { type: string; [k: string]: unknown }) => void) {
+      async stream(
+        _req: AiProviderRequest,
+        _ctx: AiToolContext,
+        emit: (event: AiSseEvent) => void,
+      ) {
         emit({ type: "tool_use", id: "x", name: "echo", args: {} });
         return { inputTokens: 0, outputTokens: 0, cachedTokens: 0, model: "m" };
       }
     }
     await expect(
       runChat({
-        provider: new LoopProvider() as unknown as AiProvider,
+        provider: new LoopProvider(),
         tools: [fakeTool],
         systemPrompt: "s",
         history: [{ role: "user", content: "hi" }],
