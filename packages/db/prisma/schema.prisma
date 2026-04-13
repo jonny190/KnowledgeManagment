@@ -134,6 +134,7 @@ model Vault {
   exportJobs  ExportJob[]
   aiConversations AiConversation[]
   aiUsage         AiUsage[]
+  diagrams    Diagram[]
 
   @@index([ownerType, ownerId])
 }
@@ -152,6 +153,7 @@ model Folder {
   children Folder[] @relation("FolderTree")
   notes       Note[]
   attachments Attachment[]
+  diagrams    Diagram[]
 
   @@index([vaultId])
   @@index([parentId])
@@ -201,18 +203,51 @@ model Attachment {
 }
 
 model Link {
-  id           String  @id @default(cuid())
-  sourceNoteId String
-  targetNoteId String?
-  targetTitle  String
-  resolved     Boolean @default(false)
-  createdAt    DateTime @default(now())
+  id              String   @id @default(cuid())
+  sourceNoteId    String
+  targetNoteId    String?
+  targetDiagramId String?
+  targetTitle     String
+  resolved        Boolean  @default(false)
+  createdAt       DateTime @default(now())
 
-  sourceNote Note  @relation("SourceNote", fields: [sourceNoteId], references: [id], onDelete: Cascade)
-  targetNote Note? @relation("TargetNote", fields: [targetNoteId], references: [id], onDelete: SetNull)
+  sourceNote    Note     @relation("SourceNote", fields: [sourceNoteId], references: [id], onDelete: Cascade)
+  targetNote    Note?    @relation("TargetNote", fields: [targetNoteId], references: [id], onDelete: SetNull)
+  targetDiagram Diagram? @relation("TargetDiagram", fields: [targetDiagramId], references: [id], onDelete: SetNull)
 
   @@index([sourceNoteId])
   @@index([targetNoteId])
+  @@index([targetDiagramId])
+}
+
+enum DiagramKind {
+  DRAWIO
+  BPMN
+}
+
+model Diagram {
+  id               String      @id @default(cuid())
+  vaultId          String
+  folderId         String?
+  kind             DiagramKind
+  title            String
+  slug             String
+  xml              String      @db.Text
+  contentUpdatedAt DateTime    @default(now())
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  createdById      String
+  updatedById      String
+
+  vault  Vault   @relation(fields: [vaultId], references: [id], onDelete: Cascade)
+  folder Folder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+
+  incomingLinks Link[] @relation("TargetDiagram")
+
+  @@unique([vaultId, slug])
+  @@index([vaultId])
+  @@index([folderId])
+  @@index([vaultId, kind])
 }
 
 enum ExportStatus {

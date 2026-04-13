@@ -26,7 +26,7 @@ export async function runExport(
   const archivePath = join(exportsDir, `${payload.jobId}.zip`);
 
   try {
-    const [folders, notes] = await Promise.all([
+    const [folders, notes, diagrams] = await Promise.all([
       prisma.folder.findMany({
         where: { vaultId: payload.vaultId },
         select: { id: true, path: true },
@@ -34,6 +34,17 @@ export async function runExport(
       prisma.note.findMany({
         where: { vaultId: payload.vaultId },
         select: { title: true, folderId: true, content: true },
+      }),
+      prisma.diagram.findMany({
+        where: { vaultId: payload.vaultId },
+        select: {
+          id: true,
+          kind: true,
+          slug: true,
+          xml: true,
+          folderId: true,
+          folder: { select: { path: true } },
+        },
       }),
     ]);
 
@@ -44,6 +55,12 @@ export async function runExport(
         title: n.title,
         folderId: n.folderId,
         content: n.content,
+      })),
+      diagrams: diagrams.map((d) => ({
+        slug: d.slug,
+        kind: d.kind,
+        xml: d.xml,
+        folderPath: d.folder?.path ?? "",
       })),
     });
 

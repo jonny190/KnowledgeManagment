@@ -1,0 +1,5 @@
+# Heavy drawio bundles - run scripts/vendor-drawio.sh to populate these locally
+js/
+stencils/
+mxgraph/
+math4/

@@ -12,10 +12,18 @@ export interface RenderNote {
   content: string;
 }
 
+export interface RenderDiagram {
+  slug: string;
+  kind: "DRAWIO" | "BPMN";
+  xml: string;
+  folderPath: string;
+}
+
 export interface RenderInput {
   outDir: string;
   folders: RenderFolder[];
   notes: RenderNote[];
+  diagrams?: RenderDiagram[];
 }
 
 const INVALID_CHARS = /[/\\:*?"<>|]/g;
@@ -55,5 +63,24 @@ export async function renderVaultToDirectory(input: RenderInput): Promise<void> 
     usedByDir.set(relDir, used);
 
     await writeFile(join(baseDir, candidate), note.content, "utf8");
+  }
+
+  for (const diagram of input.diagrams ?? []) {
+    const ext = diagram.kind === "DRAWIO" ? ".drawio" : ".bpmn";
+    const relDir = diagram.folderPath;
+    const baseDir = join(input.outDir, relDir);
+    await mkdir(baseDir, { recursive: true });
+
+    const used = usedByDir.get(relDir) ?? new Set<string>();
+    let candidate = `${diagram.slug}${ext}`;
+    let i = 2;
+    while (used.has(candidate)) {
+      candidate = `${diagram.slug}-${i}${ext}`;
+      i += 1;
+    }
+    used.add(candidate);
+    usedByDir.set(relDir, used);
+
+    await writeFile(join(baseDir, candidate), diagram.xml, "utf8");
   }
 }

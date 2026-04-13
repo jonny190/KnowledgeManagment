@@ -12,6 +12,16 @@ The detailed operator runbook lives at `infra/coolify/README.md`. This page summ
 
 Environment variables the runtime requires: `DATABASE_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `DATA_DIR=/data`. See `infra/coolify/env.example` for the canonical template.
 
+## Diagrams: vendoring drawio
+
+The drawio editor is shipped as a static web application inside `apps/web/public/drawio/`. This directory is not committed to git directly; it is populated by running `scripts/vendor-drawio.sh` from the repo root.
+
+The script expects the drawio source repository to be cloned at a path specified by the `DRAWIO_SRC` environment variable, defaulting to `/home/jonny/drawio`. It copies the compiled webapp files into `apps/web/public/drawio/` and writes the commit SHA of the copied revision to `apps/web/public/drawio/VERSION` for traceability.
+
+To update to a newer version of drawio, pull the latest commits in the drawio source repository and run the script again. The new files replace the old ones. No environment variables are required in the production deployment for drawio; the files are served as ordinary static assets by Next.js.
+
+No new environment variables are required by the diagrams feature.
+
 ## Realtime service
 
 Deploy `apps/realtime` using `infra/docker/Dockerfile.realtime`. Expose port 3001 internally; front it behind the same Cloudflare-proxied hostname as the web app under a `/yjs` path.

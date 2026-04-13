@@ -19,3 +19,10 @@ export type {
   AiCommandRequest,
   AiSseEvent,
 } from "./ai";
+export {
+  DiagramKind,
+  diagramCreateSchema,
+  diagramPatchSchema,
+  slugifyDiagramTitle,
+} from './diagrams';
+export type { DiagramCreateInput, DiagramPatchInput } from './diagrams';

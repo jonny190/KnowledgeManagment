@@ -7,6 +7,7 @@ beforeEach(async () => {
   await prisma.aiConversation.deleteMany();
   await prisma.aiUsage.deleteMany();
   await prisma.link.deleteMany();
+  await prisma.diagram.deleteMany();
   await prisma.note.deleteMany();
   await prisma.attachment.deleteMany();
   await prisma.folder.deleteMany();
