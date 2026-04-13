@@ -10,3 +10,5 @@ export { livePreview } from './livePreview';
 export { baseTheme } from './theme';
 export { collabExtension } from './collab';
 export type { CollabExtensionOptions } from './collab';
+export { aiCommands, parseSlashCommand, captureContext } from "./aiCommands";
+export type { AiCommandsOptions, ParsedCommand } from "./aiCommands";
