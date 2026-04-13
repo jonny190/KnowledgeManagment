@@ -21,7 +21,7 @@ describe('buildWikiLinkSource', () => {
     const src = buildWikiLinkSource({ search });
     const result = await src(ctxAt('[[', 2));
     expect(search).toHaveBeenCalledWith('');
-    expect(result?.options[0].label).toBe('Alpha');
+    expect(result?.options[0]?.label).toBe('Alpha');
   });
 
   it('passes the current partial query', async () => {
@@ -42,6 +42,6 @@ describe('buildWikiLinkSource', () => {
     const src = buildWikiLinkSource({ search });
     const result = await src(ctxAt('[[Al', 4));
     expect(result?.from).toBe(2);
-    expect(result?.options[0].apply).toBe('Alpha]] ');
+    expect(result?.options[0]?.apply).toBe('Alpha]] ');
   });
 });
