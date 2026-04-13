@@ -40,7 +40,7 @@ export function useCollabSession(noteId: string, user: CollabUser): CollabSessio
       if (destroyed.current) return;
 
       persistence = new IndexeddbPersistence(`km-note-${noteId}`, doc);
-      const url = process.env.NEXT_PUBLIC_REALTIME_URL;
+      const url = process.env.NEXT_PUBLIC_REALTIME_URL ?? "ws://localhost:3001";
       if (!url) throw new Error("NEXT_PUBLIC_REALTIME_URL not set");
 
       provider = new HocuspocusProvider({
