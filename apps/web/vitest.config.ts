@@ -7,6 +7,8 @@ export default defineConfig({
     include: ["tests/unit/**/*.test.ts", "src/**/*.test.ts"],
     testTimeout: 20000,
     setupFiles: ["./tests/setup/reset-db.ts"],
+    pool: "forks",
+    poolOptions: { forks: { singleFork: true } },
   },
   resolve: {
     alias: {
