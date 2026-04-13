@@ -4,7 +4,7 @@ import path from "node:path";
 export default defineConfig({
   test: {
     environment: "node",
-    include: ["tests/unit/**/*.test.ts"],
+    include: ["tests/unit/**/*.test.ts", "src/**/*.test.ts"],
     testTimeout: 20000,
     setupFiles: ["./tests/setup/reset-db.ts"],
   },
