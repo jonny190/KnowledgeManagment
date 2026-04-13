@@ -79,6 +79,25 @@ export default function NotePage({ params }: NotePageProps) {
     [titleMap],
   );
 
+  const onAsyncLinkClick = useCallback(
+    async (title: string) => {
+      if (!note) return;
+      const res = await fetch(
+        `/api/links/resolve?vaultId=${encodeURIComponent(note.vaultId)}&title=${encodeURIComponent(title)}`,
+      );
+      if (!res.ok) return;
+      const target: { kind: 'note' | 'diagram' | null; id: string | null } = await res.json();
+      if (target.kind === 'note' && target.id) {
+        router.push(`/vault/${params.vaultId}/note/${target.id}`);
+      } else if (target.kind === 'diagram' && target.id) {
+        router.push(`/vault/${params.vaultId}/diagram/${target.id}`);
+      } else {
+        setDialogTitle(title);
+      }
+    },
+    [note, params.vaultId, router],
+  );
+
   const searchTitles = useCallback(
     async (q: string) => {
       if (!note) return [];
@@ -127,6 +146,7 @@ export default function NotePage({ params }: NotePageProps) {
       resolveTitle={resolveTitle}
       onNavigate={(id) => router.push(`/vault/${params.vaultId}/note/${id}`)}
       onCreateRequest={(title) => setDialogTitle(title)}
+      onAsyncLinkClick={onAsyncLinkClick}
       searchTitles={searchTitles}
       collab={[
         collabExtension({ ytext: session.ytext, awareness: session.awareness }),

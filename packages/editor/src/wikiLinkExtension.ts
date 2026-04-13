@@ -13,6 +13,12 @@ export interface WikiLinkContext {
   resolveTitle: (title: string) => { noteId: string } | null;
   onNavigate: (noteId: string) => void;
   onCreateRequest: (title: string) => void;
+  /**
+   * Optional async resolver. When provided, Ctrl/Cmd-clicking a wiki-link
+   * calls this instead of the synchronous resolveTitle path, allowing the
+   * caller to resolve both notes and diagrams via the server.
+   */
+  onAsyncLinkClick?: (title: string) => Promise<void>;
 }
 
 function buildDecorations(view: EditorView, ctx: WikiLinkContext): DecorationSet {
@@ -64,9 +70,13 @@ export function wikiLinkExtension(ctx: WikiLinkContext) {
             const title = el.getAttribute('data-wiki-title');
             if (!title) return false;
             event.preventDefault();
-            const resolved = ctx.resolveTitle(title);
-            if (resolved) ctx.onNavigate(resolved.noteId);
-            else ctx.onCreateRequest(title);
+            if (ctx.onAsyncLinkClick) {
+              void ctx.onAsyncLinkClick(title);
+            } else {
+              const resolved = ctx.resolveTitle(title);
+              if (resolved) ctx.onNavigate(resolved.noteId);
+              else ctx.onCreateRequest(title);
+            }
             return true;
           },
         },

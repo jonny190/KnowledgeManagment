@@ -16,6 +16,7 @@ export interface NoteEditorProps {
   resolveTitle: WikiLinkContext['resolveTitle'];
   onNavigate: WikiLinkContext['onNavigate'];
   onCreateRequest: WikiLinkContext['onCreateRequest'];
+  onAsyncLinkClick?: WikiLinkContext['onAsyncLinkClick'];
   searchTitles: (q: string) => Promise<WikiSearchResult[]>;
   collab?: import("@codemirror/state").Extension;
 }
@@ -28,12 +29,14 @@ export function NoteEditor(props: NoteEditorProps) {
   const resolveTitleRef = useRef(props.resolveTitle);
   const onNavigateRef = useRef(props.onNavigate);
   const onCreateRequestRef = useRef(props.onCreateRequest);
+  const onAsyncLinkClickRef = useRef(props.onAsyncLinkClick);
   const searchTitlesRef = useRef(props.searchTitles);
   onChangeRef.current = props.onChange;
   onDropRef.current = props.onDropFiles;
   resolveTitleRef.current = props.resolveTitle;
   onNavigateRef.current = props.onNavigate;
   onCreateRequestRef.current = props.onCreateRequest;
+  onAsyncLinkClickRef.current = props.onAsyncLinkClick;
   searchTitlesRef.current = props.searchTitles;
 
   useEffect(() => {
@@ -76,6 +79,9 @@ export function NoteEditor(props: NoteEditorProps) {
           resolveTitle: (title) => resolveTitleRef.current(title),
           onNavigate: (id) => onNavigateRef.current(id),
           onCreateRequest: (title) => onCreateRequestRef.current(title),
+          onAsyncLinkClick: onAsyncLinkClickRef.current
+            ? (title) => onAsyncLinkClickRef.current!(title)
+            : undefined,
         }),
         wikiLinkAutocomplete({ search: (q) => searchTitlesRef.current(q) }),
         livePreview,
