@@ -1,0 +1,23 @@
+{
+  "name": "@km/worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "lint": "eslint src --max-warnings=0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@km/db": "workspace:*",
+    "@km/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "4.19.1",
+    "typescript": "5.5.4",
+    "vitest": "2.1.2"
+  }
+}
