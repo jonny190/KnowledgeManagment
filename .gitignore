@@ -11,3 +11,4 @@ test-results
 *.log
 .DS_Store
 packages/db/src/generated
+*.tsbuildinfo
