@@ -37,3 +37,11 @@ The browser opens a WebSocket to the realtime service, authenticated by that tok
 While editing, client and server exchange Yjs updates. The server persists merged state into `NoteDoc.state`. A per-note debounce fires `snapshotNote(noteId)` five seconds after the last change and immediately when the last live connection drops. The snapshot helper compares the current Y.Doc text to `Note.content`; on difference, it opens a transaction that updates `Note.content`, `contentUpdatedAt`, `updatedById`, and calls `recomputeLinks` so `Link` rows stay in sync with wiki-link references.
 
 Presence uses Y.Awareness. Each client writes `{ user: { id, name, color } }` into its local awareness state; `y-codemirror.next` paints remote carets and the `ActiveUsers` component lists everyone currently in the document.
+
+## AI integration
+
+Phase 3 introduced a server-mediated AI assistant. The browser never holds the model API key. All requests go through `/api/ai/chat` and `/api/ai/command`, both Server-Sent Events endpoints in the web app. Each request authenticates via `requireUserId()`, authorises with `assertCanAccessVault()`, and enforces a per-user daily budget with `enforceDailyBudget()` from `@km/ai`.
+
+The provider is wrapped behind an `AiProvider` interface in `packages/ai`. The Anthropic implementation uses prompt caching for the system prompt and the active note context. A stub provider is selected when `AI_PROVIDER=stub`, used for unit tests and CI.
+
+The tool runner in `packages/ai/src/runner.ts` drives a bounded loop of provider stream calls and tool executions. v1 tools are read-only and vault-scoped: `readNote`, `searchNotes`, `listBacklinks`. Each tool re-checks vault membership defensively before reading data.

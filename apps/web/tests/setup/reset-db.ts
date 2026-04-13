@@ -3,6 +3,9 @@ import { beforeEach, afterAll } from "vitest";
 
 beforeEach(async () => {
   // Truncate in dependency order.
+  await prisma.aiMessage.deleteMany();
+  await prisma.aiConversation.deleteMany();
+  await prisma.aiUsage.deleteMany();
   await prisma.link.deleteMany();
   await prisma.note.deleteMany();
   await prisma.attachment.deleteMany();

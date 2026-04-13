@@ -30,6 +30,9 @@ jobs:
   unit:
     name: Unit tests
     runs-on: ubuntu-latest
+    env:
+      AI_PROVIDER: stub
+      ANTHROPIC_API_KEY: stub-key-not-used
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -63,6 +66,8 @@ jobs:
     env:
       DATABASE_URL: postgres://km:km@localhost:5432/km_test
       DATA_DIR: /tmp/km-data
+      AI_PROVIDER: stub
+      ANTHROPIC_API_KEY: stub-key-not-used
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

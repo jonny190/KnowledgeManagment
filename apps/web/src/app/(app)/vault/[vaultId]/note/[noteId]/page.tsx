@@ -1,13 +1,14 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { NoteEditor, collabExtension } from '@km/editor';
+import { NoteEditor, collabExtension, aiCommands } from '@km/editor';
 import { BacklinksPanel } from '@/components/BacklinksPanel';
 import { CreateNoteDialog } from '@/components/CreateNoteDialog';
 import { useCollabSession } from '@/components/CollabSession';
 import { ActiveUsers } from '@/components/ActiveUsers';
+import { AiChatPanel } from '@/components/AiChatPanel';
 
 interface NotePageProps {
   params: { vaultId: string; noteId: string };
@@ -27,6 +28,18 @@ export default function NotePage({ params }: NotePageProps) {
   const [titleMap, setTitleMap] = useState<Map<string, string>>(new Map());
   const [dialogTitle, setDialogTitle] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+
+  const commandRunnerRef = useRef<((cmd: { command: string; selection: string; language?: string }) => void) | null>(null);
+
+  const onAiCommand = useCallback((cmd: { command: string; selection: string; language?: string }) => {
+    commandRunnerRef.current?.(cmd);
+  }, []);
+
+  const onApplyAtCursor = useCallback((text: string) => {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("ai:applyAtCursor", { detail: { text } }));
+    }
+  }, []);
 
   useEffect(() => {
     fetch(`/api/notes/${params.noteId}`)
@@ -115,7 +128,10 @@ export default function NotePage({ params }: NotePageProps) {
       onNavigate={(id) => router.push(`/vault/${params.vaultId}/note/${id}`)}
       onCreateRequest={(title) => setDialogTitle(title)}
       searchTitles={searchTitles}
-      collab={collabExtension({ ytext: session.ytext, awareness: session.awareness })}
+      collab={[
+        collabExtension({ ytext: session.ytext, awareness: session.awareness }),
+        aiCommands({ onCommand: onAiCommand }),
+      ]}
     />
   ) : null;
 
@@ -152,6 +168,14 @@ export default function NotePage({ params }: NotePageProps) {
         onCreated={(id) => {
           setDialogTitle(null);
           router.push(`/vault/${params.vaultId}/note/${id}`);
+        }}
+      />
+      <AiChatPanel
+        vaultId={params.vaultId}
+        noteId={params.noteId}
+        onApplyAtCursor={onApplyAtCursor}
+        registerCommandRunner={(fn) => {
+          commandRunnerRef.current = fn;
         }}
       />
     </div>

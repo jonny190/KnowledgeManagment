@@ -36,3 +36,9 @@ One row per issued realtime JWT. Enables explicit revocation without waiting for
 | expiresAt | DateTime | Matches JWT exp |
 | revokedAt | DateTime? | Set to block future connections |
 | createdAt | DateTime | Auto |
+
+## AI integration tables
+
+- `AiConversation` - one per `(vaultId, noteId, userId)` pairing in v1. `noteId` is nullable for future vault-wide chats. Cascades from vault delete; nulls on note delete.
+- `AiMessage` - rows per turn. `role` is one of `USER`, `ASSISTANT`, `TOOL`, `SYSTEM`. `content` stores Anthropic block JSON to preserve `text`, `tool_use`, and `tool_result` structure. Token counters captured on each row from the provider's usage payload.
+- `AiUsage` - one row per `(userId, day)`. Powers the daily budget check. Vault id is recorded for future per-vault reporting but is not part of the unique key.

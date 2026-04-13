@@ -7,3 +7,15 @@ export type { WikiLinkMatch } from './parseWikiLinks';
 export { computeSnippet } from './computeSnippet';
 export { realtimeJwtPayload } from "./realtime";
 export type { RealtimeJwtPayload } from "./realtime";
+export {
+  aiChatRequest,
+  aiCommandName,
+  aiCommandRequest,
+  aiSseEvent,
+} from "./ai";
+export type {
+  AiChatRequest,
+  AiCommandName,
+  AiCommandRequest,
+  AiSseEvent,
+} from "./ai";

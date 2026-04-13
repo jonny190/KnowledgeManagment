@@ -25,3 +25,14 @@ Environment variables the realtime service needs:
 The web service also needs `REALTIME_JWT_SECRET` and `NEXT_PUBLIC_REALTIME_URL`.
 
 Cloudflare: ensure WebSockets are enabled for the zone (Network settings), otherwise the upgrade request will be rejected and the browser will retry indefinitely.
+
+## AI integration
+
+Required on the web service:
+
+- `ANTHROPIC_API_KEY` - server-only.
+- `AI_MODEL` - default `claude-opus-4-6`.
+- `AI_DAILY_TOKEN_LIMIT` - default `200000`.
+- `AI_DAILY_REQUEST_LIMIT` - default `200`.
+- `AI_MAX_TOOL_HOPS` - default `8`.
+- `AI_PROVIDER` - leave unset in production. Set to `stub` in CI.

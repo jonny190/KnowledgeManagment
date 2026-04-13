@@ -3,6 +3,9 @@ import { randomUUID } from "node:crypto";
 
 export async function resetDb() {
   await prisma.$transaction([
+    prisma.aiMessage.deleteMany(),
+    prisma.aiConversation.deleteMany(),
+    prisma.aiUsage.deleteMany(),
     prisma.link.deleteMany(),
     prisma.attachment.deleteMany(),
     prisma.note.deleteMany(),

@@ -21,6 +21,8 @@ model User {
   sessions    Session[]
   memberships Membership[]
   ownedWorkspaces Workspace[] @relation("WorkspaceOwner")
+  aiConversations AiConversation[]
+  aiUsage         AiUsage[]
 }
 
 model Account {
@@ -130,6 +132,8 @@ model Vault {
   notes       Note[]
   attachments Attachment[]
   exportJobs  ExportJob[]
+  aiConversations AiConversation[]
+  aiUsage         AiUsage[]
 
   @@index([ownerType, ownerId])
 }
@@ -172,6 +176,7 @@ model Note {
   outgoingLinks Link[] @relation("SourceNote")
   incomingLinks Link[] @relation("TargetNote")
   doc           NoteDoc?
+  aiConversations AiConversation[]
 
   @@unique([vaultId, slug])
   @@index([vaultId])
@@ -254,4 +259,66 @@ model RealtimeGrant {
   @@index([userId])
   @@index([noteId])
   @@index([expiresAt])
+}
+
+enum AiRole {
+  USER
+  ASSISTANT
+  TOOL
+  SYSTEM
+}
+
+model AiConversation {
+  id          String   @id @default(cuid())
+  vaultId     String
+  noteId      String?
+  createdById String
+  title       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  vault     Vault       @relation(fields: [vaultId], references: [id], onDelete: Cascade)
+  note      Note?       @relation(fields: [noteId], references: [id], onDelete: SetNull)
+  createdBy User        @relation(fields: [createdById], references: [id])
+  messages  AiMessage[]
+
+  @@index([vaultId])
+  @@index([noteId])
+  @@index([createdById])
+}
+
+model AiMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  role           AiRole
+  content        Json
+  toolCalls      Json?
+  inputTokens    Int      @default(0)
+  outputTokens   Int      @default(0)
+  cachedTokens   Int      @default(0)
+  model          String?
+  createdAt      DateTime @default(now())
+
+  conversation AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+}
+
+model AiUsage {
+  id           String   @id @default(cuid())
+  userId       String
+  vaultId      String
+  day          DateTime @db.Date
+  inputTokens  Int      @default(0)
+  outputTokens Int      @default(0)
+  cachedTokens Int      @default(0)
+  requests     Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vault Vault @relation(fields: [vaultId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, day])
+  @@index([vaultId, day])
 }
