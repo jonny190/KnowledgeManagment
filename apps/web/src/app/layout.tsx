@@ -11,7 +11,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <Providers>{children}</Providers>
+        <Providers>
+          <header className="border-b p-2 flex gap-3 text-sm">
+            <a href="/workspaces" className="underline">Workspaces</a>
+            <a href="/api/auth/signout" className="underline">Sign out</a>
+          </header>
+          {children}
+        </Providers>
       </body>
     </html>
   );
