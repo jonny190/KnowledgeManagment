@@ -37,7 +37,7 @@ describe('parseWikiLinks', () => {
     const src = 'before\n```\n[[NotALink]]\n```\nafter [[Real]]';
     const r = parseWikiLinks(src);
     expect(r).toHaveLength(1);
-    expect(r[0].title).toBe('Real');
+    expect(r[0]?.title).toBe('Real');
   });
 
   it('ignores links inside tilde fenced code blocks', () => {
@@ -77,7 +77,7 @@ describe('parseWikiLinks', () => {
   it('de-duplicates by title+alias preserving first occurrence offsets', () => {
     const r = parseWikiLinks('[[A]] [[A]] [[A|x]]');
     expect(r).toHaveLength(3);
-    expect(r[0].start).toBe(0);
+    expect(r[0]?.start).toBe(0);
   });
 
   it('does not treat a single opening [ as a link', () => {
@@ -85,7 +85,7 @@ describe('parseWikiLinks', () => {
   });
 
   it('handles tildes with fewer than three as not a fence', () => {
-    expect(parseWikiLinks('~~\n[[Alpha]]\n~~')[0].title).toBe('Alpha');
+    expect(parseWikiLinks('~~\n[[Alpha]]\n~~')[0]?.title).toBe('Alpha');
   });
 
   it('reopens parsing after a closing fence', () => {
