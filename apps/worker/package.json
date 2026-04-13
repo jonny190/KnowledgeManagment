@@ -9,13 +9,17 @@
     "start": "node dist/index.js",
     "lint": "eslint src --ext .ts,.tsx --max-warnings=0",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests"
+    "test": "dotenv -e ../../.env -- vitest run --passWithNoTests"
   },
   "dependencies": {
     "@km/db": "workspace:*",
-    "@km/shared": "workspace:*"
+    "@km/shared": "workspace:*",
+    "archiver": "7.0.1",
+    "pg-boss": "9.0.3"
   },
   "devDependencies": {
+    "@types/archiver": "6.0.2",
+    "dotenv-cli": "7.4.2",
     "tsx": "4.19.1",
     "typescript": "5.5.4",
     "vitest": "2.1.2"

@@ -217,14 +217,15 @@ enum ExportStatus {
 }
 
 model ExportJob {
-  id          String       @id @default(cuid())
-  vaultId     String
-  status      ExportStatus @default(PENDING)
-  startedAt   DateTime?
-  finishedAt  DateTime?
-  archivePath String?
-  error       String?
-  createdAt   DateTime     @default(now())
+  id                 String       @id @default(cuid())
+  vaultId            String
+  status             ExportStatus @default(PENDING)
+  requestedByUserId  String?
+  startedAt          DateTime?
+  finishedAt         DateTime?
+  archivePath        String?
+  errorMessage       String?
+  createdAt          DateTime     @default(now())
 
   vault Vault @relation(fields: [vaultId], references: [id], onDelete: Cascade)
 

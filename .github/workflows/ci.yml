@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  static:
+    name: Lint and typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @km/db prisma generate
+      - run: pnpm lint
+      - run: pnpm typecheck
+
+  unit:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @km/db prisma generate
+      - run: pnpm test
+
+  integration:
+    name: Integration tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: km
+          POSTGRES_PASSWORD: km
+          POSTGRES_DB: km_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U km -d km_test"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=20
+    env:
+      DATABASE_URL: postgres://km:km@localhost:5432/km_test
+      DATA_DIR: /tmp/km-data
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: sudo apt-get update && sudo apt-get install -y unzip
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @km/db prisma migrate deploy
+      - run: pnpm test:integration
