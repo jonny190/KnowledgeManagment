@@ -8,3 +8,5 @@ export { wikiLinkAutocomplete, buildWikiLinkSource } from './wikiLinkAutocomplet
 export type { WikiSearchResult } from './wikiLinkAutocomplete';
 export { livePreview } from './livePreview';
 export { baseTheme } from './theme';
+export { collabExtension } from './collab';
+export type { CollabExtensionOptions } from './collab';
