@@ -48,6 +48,8 @@ describe("ai tools", () => {
     await prisma.aiConversation.deleteMany({});
     await prisma.aiUsage.deleteMany({});
     await prisma.vault.deleteMany({});
+    await prisma.membership.deleteMany({});
+    await prisma.workspace.deleteMany({});
     await prisma.user.deleteMany({});
   });
 
