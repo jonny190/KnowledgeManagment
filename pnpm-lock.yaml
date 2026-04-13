@@ -44,6 +44,9 @@ importers:
       '@km/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@km/worker':
+        specifier: workspace:^
+        version: link:../worker
       '@prisma/client':
         specifier: 5.20.0
         version: 5.20.0(prisma@5.20.0)
