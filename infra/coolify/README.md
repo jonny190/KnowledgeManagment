@@ -93,6 +93,20 @@ The web service additionally needs:
 
 Cloudflare Proxy: the realtime route must have WebSockets enabled in the Cloudflare dashboard under Network settings. Per the project convention, the upstream between Cloudflare and Coolify is HTTP; the WebSocket upgrade travels over the same connection.
 
+## AI integration
+
+Phase 3 adds an in-app chat panel and inline slash commands powered by the Anthropic Claude API. No new container is required; the web service makes outbound HTTPS calls to api.anthropic.com.
+
+Required env vars on the web service:
+
+- `ANTHROPIC_API_KEY` - server-only secret. Never expose to the browser.
+- `AI_MODEL` - default `claude-opus-4-6`. Override per environment if needed.
+- `AI_DAILY_TOKEN_LIMIT` - default `200000`. Per-user, per-day combined input plus output token cap.
+- `AI_DAILY_REQUEST_LIMIT` - default `200`. Per-user, per-day request cap.
+- `AI_MAX_TOOL_HOPS` - default `8`. Upper bound on tool-call rounds per chat turn.
+
+The Cloudflare proxy already supports Server-Sent Events. No proxy config changes are needed for the new endpoints (`/api/ai/chat`, `/api/ai/command`, `/api/ai/conversations`).
+
 ## Troubleshooting
 
 - `worker` restarts in a loop: check `DATABASE_URL` reachability and that the pg-boss schema has been created. pg-boss provisions its own schema on first run; if the Postgres user lacks `CREATE` permission, grant it.
