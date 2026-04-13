@@ -106,7 +106,7 @@ model Invite {
   id          String         @id @default(cuid())
   workspaceId String
   email       String
-  token       String         @unique
+  tokenHash   String         @unique
   role        MembershipRole
   expiresAt   DateTime
   acceptedAt  DateTime?
