@@ -15,7 +15,7 @@ describe("folder-path", () => {
     const { vault } = await createUser();
     const a = await prisma.folder.create({ data: { vaultId: vault.id, name: "A", path: "A" } });
     const b = await prisma.folder.create({ data: { vaultId: vault.id, parentId: a.id, name: "B", path: "A/B" } });
-    const c = await prisma.folder.create({ data: { vaultId: vault.id, parentId: b.id, name: "C", path: "A/B/C" } });
+    await prisma.folder.create({ data: { vaultId: vault.id, parentId: b.id, name: "C", path: "A/B/C" } });
 
     await prisma.folder.update({ where: { id: a.id }, data: { name: "AA", path: "AA" } });
     await recomputeDescendantPaths(prisma, a.id);

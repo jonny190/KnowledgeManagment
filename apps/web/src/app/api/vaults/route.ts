@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@km/db";
 import { requireUserId } from "@/lib/session";
 
-export async function GET(_req: Request) {
+export async function GET() {
   const userId = await requireUserId();
 
   const personal = await prisma.vault.findMany({
