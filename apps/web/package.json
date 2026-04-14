@@ -23,6 +23,7 @@
     "@km/worker": "workspace:^",
     "@prisma/client": "5.20.0",
     "bcryptjs": "2.4.3",
+    "cmdk": "^1.1.1",
     "cytoscape": "^3.33.2",
     "cytoscape-fcose": "^2.2.0",
     "jsonwebtoken": "^9.0.3",
