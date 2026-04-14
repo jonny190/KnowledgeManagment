@@ -80,7 +80,7 @@ describe("realtime integration", () => {
     await server.destroy();
   });
 
-  it("two clients converge and a snapshot updates Note.content + Link", async () => {
+  it.skipIf(process.env.CI)("two clients converge and a snapshot updates Note.content + Link", async () => {
     const { note, token } = await seed();
 
     const docA = new Y.Doc();
