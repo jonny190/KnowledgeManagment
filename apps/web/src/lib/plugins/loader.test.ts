@@ -15,7 +15,7 @@ describe("loadPlugins", () => {
   });
 
   it("loads same-origin plugins by default", async () => {
-    (globalThis as any).__plugin = {
+    const stub = {
       plugin: {
         id: "t",
         name: "T",
@@ -29,9 +29,9 @@ describe("loadPlugins", () => {
       origin: "https://app.example.com",
       vaultId: "v",
       userId: "u",
-      importer: async () => (globalThis as any).__plugin,
+      importer: async () => stub,
     });
     expect(res.loaded).toHaveLength(1);
-    expect((globalThis as any).__plugin.plugin.activate).toHaveBeenCalled();
+    expect(stub.plugin.activate).toHaveBeenCalled();
   });
 });

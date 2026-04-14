@@ -18,8 +18,9 @@ export async function PATCH(
   let body: z.infer<typeof patchSchema>;
   try {
     body = patchSchema.parse(await req.json());
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 400 });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "Bad request";
+    return NextResponse.json({ error: msg }, { status: 400 });
   }
   try {
     const row = await prisma.userPlugin.update({

@@ -6,8 +6,8 @@ export class PluginRegistry {
   commands: Bucket<PluginCommand> = new Map();
   statusItems: Bucket<StatusBarItem> = new Map();
   editorExtensions: Bucket<unknown> = new Map();
-  noteOpen: Bucket<(n: any) => void> = new Map();
-  noteSave: Bucket<(n: any) => void> = new Map();
+  noteOpen: Bucket<(n: { id: string; title: string }) => void> = new Map();
+  noteSave: Bucket<(n: { id: string; title: string; content: string }) => void> = new Map();
 
   private counter = 0;
 
@@ -30,10 +30,10 @@ export class PluginRegistry {
   registerEditorExtension(pluginId: string, ext: unknown) {
     return this.addToBucket(this.editorExtensions, pluginId, ext);
   }
-  onNoteOpen(pluginId: string, handler: (n: any) => void) {
+  onNoteOpen(pluginId: string, handler: (n: { id: string; title: string }) => void) {
     return this.addToBucket(this.noteOpen, pluginId, handler);
   }
-  onNoteSave(pluginId: string, handler: (n: any) => void) {
+  onNoteSave(pluginId: string, handler: (n: { id: string; title: string; content: string }) => void) {
     return this.addToBucket(this.noteSave, pluginId, handler);
   }
 

@@ -2,24 +2,47 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 
+interface GraphNode {
+  id: string;
+  label: string;
+  title: string;
+  slug: string;
+  backlinkCount: number;
+  tags: string[];
+}
+
+interface GraphEdge {
+  id: string;
+  source: string;
+  target: string;
+  targetTitle: string;
+}
+
+interface GraphData {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+}
+
 export default function GraphPage() {
   const { vaultId } = useParams<{ vaultId: string }>();
   const router = useRouter();
   const ref = useRef<HTMLDivElement | null>(null);
-  const cyRef = useRef<any>(null);
-  const [data, setData] = useState<{ nodes: any[]; edges: any[] } | null>(null);
+  // cytoscape Core is typed by @types/cytoscape but we load it dynamically, so keep as unknown
+  const cyRef = useRef<unknown>(null);
+  const [data, setData] = useState<GraphData | null>(null);
   const [filter, setFilter] = useState("");
   const [activeTag, setActiveTag] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`/api/vaults/${vaultId}/graph`)
       .then((r) => r.json())
-      .then(setData);
+      .then((d: GraphData) => setData(d));
   }, [vaultId]);
 
   useEffect(() => {
     if (!data || !ref.current) return;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let cy: any;
     let destroyed = false;
 
@@ -49,6 +72,7 @@ export default function GraphPage() {
           })),
           ...data.edges.map((e) => ({ data: e })),
         ],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         layout: { name: "fcose", animate: false } as any,
         style: [
           {
@@ -72,6 +96,7 @@ export default function GraphPage() {
         ],
       });
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       cy.on("tap", "node", (evt: any) => {
         router.push(`/vault/${vaultId}/note/${evt.target.id()}`);
       });
@@ -81,18 +106,21 @@ export default function GraphPage() {
 
     return () => {
       destroyed = true;
-      cy?.destroy();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (cy as any)?.destroy();
       cyRef.current = null;
     };
   }, [data, vaultId, router]);
 
   useEffect(() => {
-    const cy = cyRef.current;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const cy = cyRef.current as any;
     if (!cy) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     cy.nodes().forEach((n: any) => {
-      const label = (n.data("label") ?? "").toLowerCase();
+      const label = (n.data("label") ?? "") as string;
       const tags = (n.data("tags") ?? []) as string[];
-      const passFilter = filter.length === 0 || label.includes(filter.toLowerCase());
+      const passFilter = filter.length === 0 || label.toLowerCase().includes(filter.toLowerCase());
       const passTag = !activeTag || tags.includes(activeTag);
       n.toggleClass("hidden", !(passFilter && passTag));
     });
@@ -100,7 +128,7 @@ export default function GraphPage() {
 
   const allTags = useMemo(() => {
     const s = new Set<string>();
-    data?.nodes.forEach((n) => n.tags.forEach((t: string) => s.add(t)));
+    data?.nodes.forEach((n) => n.tags.forEach((t) => s.add(t)));
     return [...s].sort();
   }, [data]);
 
@@ -126,7 +154,8 @@ export default function GraphPage() {
           ))}
         </select>
         <button
-          onClick={() => cyRef.current?.layout({ name: "fcose", animate: false } as any).run()}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          onClick={() => (cyRef.current as any)?.layout({ name: "fcose", animate: false } as any).run()}
           className="rounded border px-2 py-1"
         >
           Reset layout

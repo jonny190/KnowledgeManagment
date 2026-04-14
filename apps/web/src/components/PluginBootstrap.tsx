@@ -26,7 +26,7 @@ export function PluginBootstrap() {
           .map((s) => s.trim())
           .filter(Boolean);
         await loadPlugins({
-          urls: (plugins as any[]).filter((p) => p.enabled).map((p) => p.url as string),
+          urls: (plugins as { enabled: boolean; url: string }[]).filter((p) => p.enabled).map((p) => p.url),
           allowList,
           origin: window.location.origin,
           vaultId,

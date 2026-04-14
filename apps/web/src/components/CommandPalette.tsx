@@ -5,11 +5,12 @@ import { useRouter } from "next/navigation";
 import { pluginRegistry } from "@/lib/plugins/registry";
 import { useActiveVault } from "@/hooks/useActiveVault";
 import { useTheme } from "./ThemeProvider";
+import type { SearchHit } from "@/lib/search";
 
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [hits, setHits] = useState<any[]>([]);
+  const [hits, setHits] = useState<SearchHit[]>([]);
   const router = useRouter();
   const vaultId = useActiveVault();
   const { toggle: toggleTheme } = useTheme();

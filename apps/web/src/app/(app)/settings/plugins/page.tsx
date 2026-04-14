@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 
 export default function PluginsSettingsPage() {
-  const [list, setList] = useState<any[]>([]);
+  const [list, setList] = useState<{ id: string; url: string; enabled: boolean }[]>([]);
   const [url, setUrl] = useState("");
 
   async function reload() {

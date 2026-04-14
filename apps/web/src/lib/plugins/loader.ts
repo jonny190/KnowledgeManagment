@@ -30,11 +30,11 @@ export async function loadPlugins(args: {
   origin: string;
   vaultId: string;
   userId: string;
-  importer?: (url: string) => Promise<any>;
+  importer?: (url: string) => Promise<Record<string, unknown>>;
 }): Promise<LoadResult> {
   const loaded: LoadedPlugin[] = [];
   const errors: LoadError[] = [];
-  const importer = args.importer ?? ((u: string) => import(/* @vite-ignore */ u));
+  const importer = args.importer ?? ((u: string) => import(/* @vite-ignore */ u) as Promise<Record<string, unknown>>);
 
   for (const url of args.urls) {
     if (!isAllowed(url, args.origin, args.allowList)) {
@@ -50,8 +50,9 @@ export async function loadPlugins(args: {
       });
       await parsed.activate(ctx);
       loaded.push({ url, definition: parsed as PluginDefinition });
-    } catch (e: any) {
-      errors.push({ url, error: e?.message ?? "load-failed" });
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "load-failed";
+      errors.push({ url, error: msg });
     }
   }
 

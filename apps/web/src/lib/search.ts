@@ -9,18 +9,21 @@ export interface SearchHit {
 }
 
 const ALLOWED_TAG_RE = /<\/?mark>/g;
+const SENTINEL_OPEN = "\uE000";
+const SENTINEL_CLOSE = "\uE001";
+const SENTINEL_RE = new RegExp(`${SENTINEL_OPEN}(\\d+)${SENTINEL_CLOSE}`, "g");
 
 function sanitiseSnippet(raw: string): string {
   const preserved: string[] = [];
   const replaced = raw.replace(ALLOWED_TAG_RE, (m) => {
     preserved.push(m);
-    return `\u0000${preserved.length - 1}\u0000`;
+    return `${SENTINEL_OPEN}${preserved.length - 1}${SENTINEL_CLOSE}`;
   });
   const escaped = replaced
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
-  return escaped.replace(/\u0000(\d+)\u0000/g, (_, i) => preserved[Number(i)] ?? "");
+  return escaped.replace(SENTINEL_RE, (_, i) => preserved[Number(i)] ?? "");
 }
 
 export async function searchNotes(args: {

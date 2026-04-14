@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { NextRequest } from "next/server";
-import { prisma } from "@km/db";
 import { makeVaultWithNotes } from "@/test/factories";
 
 vi.mock("@/lib/session", () => ({
