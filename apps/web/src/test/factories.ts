@@ -17,9 +17,10 @@ export async function makeVaultWithNotes(titles: string[]) {
     data: { vaultId: vault.id, parentId: null, name: "", path: "" },
   });
 
+  const notes = [];
   for (const title of titles) {
     const slug = title.toLowerCase().replace(/\s+/g, "-");
-    await prisma.note.create({
+    const note = await prisma.note.create({
       data: {
         vaultId: vault.id,
         title,
@@ -29,9 +30,44 @@ export async function makeVaultWithNotes(titles: string[]) {
         updatedById: user.id,
       },
     });
+    notes.push(note);
   }
 
-  return { vault, user };
+  return { vault, user, notes };
+}
+
+/**
+ * Create a resolved Link between two notes.
+ */
+export async function linkNotes(sourceNoteId: string, targetNoteId: string) {
+  const target = await prisma.note.findUniqueOrThrow({
+    where: { id: targetNoteId },
+    select: { title: true },
+  });
+  return prisma.link.create({
+    data: {
+      sourceNoteId,
+      targetNoteId,
+      targetTitle: target.title,
+      resolved: true,
+    },
+  });
+}
+
+/**
+ * Tag a note by name, creating the Tag row if needed.
+ */
+export async function tagNote(noteId: string, vaultId: string, tagName: string) {
+  const tag = await prisma.tag.upsert({
+    where: { vaultId_name: { vaultId, name: tagName } },
+    create: { vaultId, name: tagName },
+    update: {},
+  });
+  return prisma.noteTag.upsert({
+    where: { noteId_tagId: { noteId, tagId: tag.id } },
+    create: { noteId, tagId: tag.id },
+    update: {},
+  });
 }
 
 /**
