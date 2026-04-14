@@ -27,3 +27,11 @@ export {
   slugifyDiagramTitle,
 } from './diagrams';
 export type { DiagramCreateInput, DiagramPatchInput } from './diagrams';
+export { pluginDefinitionSchema } from './plugins';
+export type {
+  Disposable,
+  PluginCommand,
+  StatusBarItem,
+  PluginContext,
+  PluginDefinition,
+} from './plugins';
