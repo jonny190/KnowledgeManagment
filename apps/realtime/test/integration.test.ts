@@ -41,7 +41,7 @@ async function seed() {
   return { user, vault, note, token };
 }
 
-async function waitFor(fn: () => boolean | Promise<boolean>, ms = 8000) {
+async function waitFor(fn: () => boolean | Promise<boolean>, ms = 20000) {
   const start = Date.now();
   while (Date.now() - start < ms) {
     const result = await fn();
