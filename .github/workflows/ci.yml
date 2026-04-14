@@ -30,9 +30,27 @@ jobs:
   unit:
     name: Unit tests
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: km
+          POSTGRES_PASSWORD: km
+          POSTGRES_DB: km_unit
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U km -d km_unit"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=20
     env:
+      DATABASE_URL: postgres://km:km@localhost:5432/km_unit
       AI_PROVIDER: stub
       ANTHROPIC_API_KEY: stub-key-not-used
+      NEXTAUTH_SECRET: ci-unit-secret
+      REALTIME_JWT_SECRET: ci-unit-realtime-secret
+      DATA_DIR: /tmp/km-unit-data
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -44,6 +62,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @km/db exec prisma generate
+      - run: pnpm --filter @km/db exec prisma migrate deploy
       - run: pnpm test
 
   integration:
