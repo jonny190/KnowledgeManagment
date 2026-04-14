@@ -20,7 +20,7 @@ function sanitiseSnippet(raw: string): string {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
-  return escaped.replace(/\u0000(\d+)\u0000/g, (_, i) => preserved[Number(i)]);
+  return escaped.replace(/\u0000(\d+)\u0000/g, (_, i) => preserved[Number(i)] ?? "");
 }
 
 export async function searchNotes(args: {

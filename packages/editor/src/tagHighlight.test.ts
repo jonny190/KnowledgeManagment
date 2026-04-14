@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from "vitest";
-import { EditorState } from "@codemirror/state";
+import { EditorState, StateField } from "@codemirror/state";
+import { DecorationSet } from "@codemirror/view";
 import { tagHighlight } from "./tagHighlight";
 
 describe("tagHighlight extension", () => {
@@ -9,8 +10,8 @@ describe("tagHighlight extension", () => {
       doc: "body with #draft tag",
       extensions: [tagHighlight()],
     });
-    const field = state.field(tagHighlight.field as any);
-    expect(field.size).toBeGreaterThan(0);
+    const decorations = state.field(tagHighlight.field as StateField<DecorationSet>);
+    expect(decorations.size).toBeGreaterThan(0);
   });
 
   it("produces no decorations for a document without tags", () => {
@@ -18,7 +19,7 @@ describe("tagHighlight extension", () => {
       doc: "plain text no tags here",
       extensions: [tagHighlight()],
     });
-    const field = state.field(tagHighlight.field as any);
-    expect(field.size).toBe(0);
+    const decorations = state.field(tagHighlight.field as StateField<DecorationSet>);
+    expect(decorations.size).toBe(0);
   });
 });

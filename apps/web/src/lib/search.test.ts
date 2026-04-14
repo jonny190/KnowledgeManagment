@@ -34,7 +34,8 @@ describe("searchNotes", () => {
       },
     });
     const r = await searchNotes({ vaultId: vault.id, query: "welcome", limit: 10 });
-    expect(r[0].title).toBe("Welcome");
+    expect(r.length).toBeGreaterThan(0);
+    expect(r[0]!.title).toBe("Welcome");
   });
 
   it("sanitises snippet to only <mark> tags", async () => {
@@ -51,7 +52,7 @@ describe("searchNotes", () => {
     });
     const r = await searchNotes({ vaultId: vault.id, query: "hello", limit: 10 });
     expect(r.length).toBeGreaterThan(0);
-    expect(r[0].snippet).not.toContain("<script>");
-    expect(r[0].snippet).toContain("<mark>");
+    expect(r[0]!.snippet).not.toContain("<script>");
+    expect(r[0]!.snippet).toContain("<mark>");
   });
 });
