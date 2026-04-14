@@ -5,9 +5,10 @@ import { makeVaultWithNotes, linkNotes, tagNote } from "../test/factories";
 describe("buildGraph", () => {
   it("returns nodes, edges, backlink counts, and tags", async () => {
     const { vault, notes } = await makeVaultWithNotes(["A", "B", "C"]);
-    await linkNotes(notes[0].id, notes[1].id);
-    await linkNotes(notes[2].id, notes[1].id);
-    await tagNote(notes[1].id, vault.id, "draft");
+    const [noteA, noteB, noteC] = notes;
+    await linkNotes(noteA!.id, noteB!.id);
+    await linkNotes(noteC!.id, noteB!.id);
+    await tagNote(noteB!.id, vault.id, "draft");
 
     const g = await buildGraph(vault.id);
     expect(g.nodes).toHaveLength(3);

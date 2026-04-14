@@ -49,7 +49,7 @@ export default function GraphPage() {
           })),
           ...data.edges.map((e) => ({ data: e })),
         ],
-        layout: { name: "fcose", animate: false },
+        layout: { name: "fcose", animate: false } as any,
         style: [
           {
             selector: "node",
@@ -126,7 +126,7 @@ export default function GraphPage() {
           ))}
         </select>
         <button
-          onClick={() => cyRef.current?.layout({ name: "fcose", animate: false }).run()}
+          onClick={() => cyRef.current?.layout({ name: "fcose", animate: false } as any).run()}
           className="rounded border px-2 py-1"
         >
           Reset layout

@@ -11,7 +11,7 @@ describe("loadPlugins", () => {
       userId: "u",
     });
     expect(res.loaded).toHaveLength(0);
-    expect(res.errors[0].url).toBe("https://evil.example.com/p.js");
+    expect(res.errors[0]!.url).toBe("https://evil.example.com/p.js");
   });
 
   it("loads same-origin plugins by default", async () => {
