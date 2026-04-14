@@ -5,7 +5,7 @@ import { buildGraph } from "@/lib/graph";
 
 export async function GET(
   _req: Request,
-  { params }: { params: { vaultId: string } },
+  { params }: { params: { id: string } },
 ) {
   let userId: string;
   try {
@@ -14,12 +14,12 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   try {
-    await assertCanAccessVault(userId, params.vaultId, "MEMBER");
+    await assertCanAccessVault(userId, params.id, "MEMBER");
   } catch (e) {
     if (e instanceof AuthzError) {
       return NextResponse.json({ error: e.message }, { status: e.status });
     }
     throw e;
   }
-  return NextResponse.json(await buildGraph(params.vaultId));
+  return NextResponse.json(await buildGraph(params.id));
 }

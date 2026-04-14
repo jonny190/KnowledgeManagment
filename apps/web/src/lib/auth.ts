@@ -7,16 +7,10 @@ import { compare } from "bcryptjs";
 import { prisma } from "@km/db";
 import { loginSchema } from "@km/shared";
 
-function requireEnv(name: string): string {
-  const v = process.env[name];
-  if (!v) throw new Error(`Missing required env var: ${name}`);
-  return v;
-}
-
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
-  secret: requireEnv("NEXTAUTH_SECRET"),
+  secret: process.env.NEXTAUTH_SECRET,
   pages: {
     signIn: "/login",
   },

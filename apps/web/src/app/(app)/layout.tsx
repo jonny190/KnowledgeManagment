@@ -4,6 +4,8 @@ import { StatusBar } from "@/components/StatusBar";
 import { CommandPalette } from "@/components/CommandPalette";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
+export const dynamic = "force-dynamic";
+
 export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider>

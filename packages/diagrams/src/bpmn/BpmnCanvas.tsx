@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useImperativeHandle, useRef, forwardRef } from 'react';
 import BpmnModeler from 'bpmn-js/lib/Modeler';
 
