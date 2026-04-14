@@ -42,10 +42,14 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @km/db prisma migrate deploy
+      - run: pnpm --filter @km/db exec prisma generate
+      - run: pnpm --filter @km/db exec prisma migrate deploy
       - run: pnpm --filter @km/web build
       - run: pnpm --filter @km/web exec playwright install --with-deps chromium
-      - run: pnpm --filter @km/web exec dotenv -e ../../.env -- playwright test
+      - run: pnpm --filter @km/web exec playwright test
+        env:
+          AI_PROVIDER: stub
+          ANTHROPIC_API_KEY: stub-key-not-used
       - uses: actions/upload-artifact@v4
         if: always()
         with:

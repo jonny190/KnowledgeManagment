@@ -23,7 +23,7 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @km/db prisma generate
+      - run: pnpm --filter @km/db exec prisma generate
       - run: pnpm lint
       - run: pnpm typecheck
 
@@ -43,7 +43,7 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @km/db prisma generate
+      - run: pnpm --filter @km/db exec prisma generate
       - run: pnpm test
 
   integration:
@@ -79,9 +79,15 @@ jobs:
           cache: pnpm
       - run: sudo apt-get update && sudo apt-get install -y unzip
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @km/db prisma migrate deploy
-      - run: pnpm test:integration
-      - name: Realtime integration tests
+      - run: pnpm --filter @km/db exec prisma generate
+      - run: pnpm --filter @km/db exec prisma migrate deploy
+      - name: Web integration tests
         env:
           REALTIME_JWT_SECRET: ci-realtime-secret
-        run: pnpm --filter @km/realtime test:integration
+        run: pnpm --filter @km/web test
+      - name: Realtime tests
+        env:
+          REALTIME_JWT_SECRET: ci-realtime-secret
+        run: pnpm --filter @km/realtime test
+      - name: Worker tests
+        run: pnpm --filter @km/worker test
