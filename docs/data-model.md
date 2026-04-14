@@ -61,6 +61,55 @@ The `(vaultId, slug)` pair is unique. Slugs are generated from the title and ded
 
 The `Link.targetDiagramId` column points at a `Diagram` row when a wiki-link resolves to a diagram rather than a note. When both a note and a diagram share the same title, `targetNoteId` is set and `targetDiagramId` is left null.
 
+## Tags
+
+The tagging system uses two tables.
+
+`Tag` stores one row per unique tag name per vault.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| id | String (PK) | cuid |
+| vaultId | String | FK to Vault, cascade delete |
+| name | String | Lowercase tag name, e.g. `draft` or `project/website` |
+| createdAt | DateTime | Auto |
+
+The `(vaultId, name)` pair is unique.
+
+`NoteTag` is the join table between notes and tags.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| noteId | String (PK component) | FK to Note, cascade delete |
+| tagId | String (PK component) | FK to Tag, cascade delete |
+| createdAt | DateTime | Auto |
+
+Tags are recomputed inside the same transaction that updates a note. The transaction deletes all existing `NoteTag` rows for the note, then re-parses the content with `parseTags` from `@km/shared`, upserts `Tag` rows, and inserts new `NoteTag` rows.
+
+## Note.searchVector
+
+The `Note` table has a `searchVector` column of type `tsvector` (Postgres only, not visible in Prisma's model directly). A `BEFORE INSERT OR UPDATE` trigger on the table calls:
+
+```sql
+NEW."searchVector" := to_tsvector('simple', coalesce(NEW.title, '') || ' ' || coalesce(NEW.content, ''));
+```
+
+An index of type `GIN` on this column supports fast full-text queries. Searches go through `websearch_to_tsquery('simple', ...)` so users can write quoted phrases and `OR` operators without learning special syntax.
+
+## UserPlugin
+
+Stores the list of plugin URLs a user has registered.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| id | String (PK) | cuid |
+| userId | String | FK to User, cascade delete |
+| url | String | Absolute URL of the plugin ESM bundle |
+| enabled | Boolean | Default true; false means skip on load |
+| createdAt | DateTime | Auto |
+
+The `(userId, url)` pair is unique. Adding a URL that already exists re-enables it rather than creating a duplicate.
+
 ## AI integration tables
 
 - `AiConversation` - one per `(vaultId, noteId, userId)` pairing in v1. `noteId` is nullable for future vault-wide chats. Cascades from vault delete; nulls on note delete.

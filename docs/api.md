@@ -58,6 +58,100 @@ Resolves a wiki-link title within a vault. Returns a target object:
 
 Notes take precedence when both exist.
 
+## Search
+
+### GET /api/search?vaultId=...&q=...&limit=...
+
+Full-text search across note titles and content in a vault. The caller must be a member of the vault.
+
+Query parameters:
+
+- `vaultId` (required) - the vault to search.
+- `q` (required) - the query string. Supports quoted phrases, `OR`, and `-term` exclusions via `websearch_to_tsquery`.
+- `limit` (optional, default 50, max 100) - maximum number of results.
+
+Response:
+
+```json
+{
+  "results": [
+    {
+      "id": "...",
+      "title": "My note",
+      "snippet": "...highlighted <mark>match</mark> context...",
+      "rank": 0.0759,
+      "updatedAt": "2026-04-14T10:00:00Z"
+    }
+  ]
+}
+```
+
+Queries shorter than two characters return an empty result without hitting the database.
+
+## Tags
+
+### GET /api/vaults/:id/tags
+
+Returns all tags used across notes in the vault, ordered by note count descending then name ascending.
+
+Response:
+
+```json
+{
+  "tags": [
+    { "name": "draft", "count": 5 },
+    { "name": "project/website", "count": 2 }
+  ]
+}
+```
+
+## Graph
+
+### GET /api/vaults/:id/graph
+
+Returns the complete knowledge graph for a vault as nodes and directed edges. Each node is a note and each edge represents a wiki-link from one note to another.
+
+Response:
+
+```json
+{
+  "nodes": [
+    { "id": "...", "title": "Alpha", "slug": "alpha" }
+  ],
+  "edges": [
+    { "source": "...", "target": "...", "targetTitle": "Beta" }
+  ]
+}
+```
+
+Unresolved links (where the target note does not exist) are omitted from edges.
+
+## Plugins
+
+### GET /api/plugins
+
+Returns all plugin records for the authenticated user.
+
+Response: `{ "plugins": [{ "id": "...", "url": "...", "enabled": true, "createdAt": "..." }] }`
+
+### POST /api/plugins
+
+Body: `{ "url": "..." }`. Adds a plugin URL for the current user. If the URL already exists it is re-enabled. Returns 201 with the created or updated plugin record.
+
+### PATCH /api/plugins/:id
+
+Body: `{ "enabled": true | false }`. Toggles the plugin on or off without removing it. Returns 200 with the updated record.
+
+### DELETE /api/plugins/:id
+
+Removes the plugin record. Returns 204.
+
+## Theme
+
+### PATCH /api/me/theme
+
+Body: `{ "themePreference": "light" | "dark" | "system" }`. Stores the user's preferred colour scheme. Returns 204. The application reads this preference server-side to apply the correct CSS class before the first paint.
+
 ## AI routes
 
 ### POST /api/ai/conversations
