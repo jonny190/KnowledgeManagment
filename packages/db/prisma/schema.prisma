@@ -8,14 +8,15 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  emailVerified DateTime?
-  passwordHash  String?
-  name          String?
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id              String    @id @default(cuid())
+  email           String    @unique
+  emailVerified   DateTime?
+  passwordHash    String?
+  name            String?
+  image           String?
+  themePreference String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   accounts    Account[]
   sessions    Session[]
@@ -23,6 +24,7 @@ model User {
   ownedWorkspaces Workspace[] @relation("WorkspaceOwner")
   aiConversations AiConversation[]
   aiUsage         AiUsage[]
+  plugins     UserPlugin[]
 }
 
 model Account {
@@ -135,6 +137,7 @@ model Vault {
   aiConversations AiConversation[]
   aiUsage         AiUsage[]
   diagrams    Diagram[]
+  tags        Tag[]
 
   @@index([ownerType, ownerId])
 }
@@ -179,10 +182,14 @@ model Note {
   incomingLinks Link[] @relation("TargetNote")
   doc           NoteDoc?
   aiConversations AiConversation[]
+  tags          NoteTag[]
+
+  searchVector Unsupported("tsvector")?
 
   @@unique([vaultId, slug])
   @@index([vaultId])
   @@index([folderId])
+  @@index([searchVector], type: Gin)
 }
 
 model Attachment {
@@ -356,4 +363,42 @@ model AiUsage {
 
   @@unique([userId, day])
   @@index([vaultId, day])
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  vaultId   String
+  name      String
+  createdAt DateTime @default(now())
+
+  vault Vault     @relation(fields: [vaultId], references: [id], onDelete: Cascade)
+  notes NoteTag[]
+
+  @@unique([vaultId, name])
+  @@index([vaultId])
+}
+
+model NoteTag {
+  noteId String
+  tagId  String
+
+  note Note @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([noteId, tagId])
+  @@index([tagId])
+}
+
+model UserPlugin {
+  id        String   @id @default(cuid())
+  userId    String
+  url       String
+  enabled   Boolean  @default(true)
+  settings  Json?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, url])
+  @@index([userId])
 }

@@ -5,6 +5,7 @@ export * from "./schemas";
 export { parseWikiLinks } from './parseWikiLinks';
 export type { WikiLinkMatch } from './parseWikiLinks';
 export { computeSnippet } from './computeSnippet';
+export * from "./tags";
 export { realtimeJwtPayload } from "./realtime";
 export type { RealtimeJwtPayload } from "./realtime";
 export {
@@ -26,3 +27,11 @@ export {
   slugifyDiagramTitle,
 } from './diagrams';
 export type { DiagramCreateInput, DiagramPatchInput } from './diagrams';
+export { pluginDefinitionSchema } from './plugins';
+export type {
+  Disposable,
+  PluginCommand,
+  StatusBarItem,
+  PluginContext,
+  PluginDefinition,
+} from './plugins';

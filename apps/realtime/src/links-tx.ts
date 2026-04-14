@@ -1,7 +1,7 @@
 import type { Prisma } from "@km/db";
-import { parseWikiLinks } from "@km/shared";
+import { parseWikiLinks, parseTags } from "@km/shared";
 
-export async function recomputeLinksTx(
+export async function recomputeLinksAndTagsTx(
   tx: Prisma.TransactionClient,
   noteId: string,
   vaultId: string,
@@ -28,4 +28,28 @@ export async function recomputeLinksTx(
       })),
     });
   }
+
+  // Tags
+  const tags = parseTags(markdown);
+  const tagNames = Array.from(new Set(tags.map((t) => t.name)));
+  await tx.noteTag.deleteMany({ where: { noteId } });
+  if (tagNames.length === 0) return;
+
+  for (const name of tagNames) {
+    await tx.tag.upsert({
+      where: { vaultId_name: { vaultId, name } },
+      create: { vaultId, name },
+      update: {},
+    });
+  }
+  const tagRows = await tx.tag.findMany({
+    where: { vaultId, name: { in: tagNames } },
+    select: { id: true },
+  });
+  await tx.noteTag.createMany({
+    data: tagRows.map((r) => ({ noteId, tagId: r.id })),
+    skipDuplicates: true,
+  });
 }
+
+export const recomputeLinksTx = recomputeLinksAndTagsTx;

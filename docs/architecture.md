@@ -61,3 +61,31 @@ The `packages/diagrams` package owns all diagram UI code and lives next to the o
 **Wiki-link resolution.** Ctrl-clicking or Cmd-clicking a wiki-link in the editor calls `GET /api/links/resolve?vaultId=...&title=...`, which resolves the title to either a note or a diagram using note-wins tiebreak. The `recomputeLinks` function that runs on every save now populates `Link.targetDiagramId` when no note matches but a diagram does.
 
 **Export.** The vault export worker includes diagrams in the zip archive alongside notes. Each drawio diagram is written as a `.drawio` file and each BPMN diagram as a `.bpmn` file, preserving the folder structure of the vault.
+
+## Phase 5 polish
+
+Phase 5 added full-text search, a tag system, a knowledge graph, a command palette, a plugin system, and dark mode. The detailed specification lives at `docs/superpowers/plans/2026-04-13-phase5-polish.md`.
+
+### Search
+
+Notes gain a `searchVector` generated column of type `tsvector` that is kept in sync by a Postgres trigger on `INSERT` and `UPDATE`. The trigger calls `to_tsvector('simple', coalesce(title, '') || ' ' || coalesce(content, ''))` and stores the result. Querying uses `websearch_to_tsquery('simple', ...)` so users can type natural phrases, quoted strings, and `OR` operators. Results are ranked with `ts_rank_cd` and snippets are generated with `ts_headline`. The search library lives in `apps/web/src/lib/search.ts` and is exposed through `GET /api/search?vaultId=...&q=...`.
+
+### Tags
+
+The `parseTags` pure function in `packages/shared/src/tags.ts` scans markdown for `#tag` patterns, skipping fenced code blocks and inline code. It returns `TagMatch` objects carrying the name, start offset, and end offset of each match. The `Tag` and `NoteTag` database tables are populated inside the same transaction that updates a note's content. `GET /api/vaults/:id/tags` returns all tags used in a vault ordered by note count. Individual tag pages at `/vault/:id/tags/:name` list notes that carry that tag.
+
+### Knowledge graph
+
+`GET /api/vaults/:id/graph` returns `{ nodes, edges }` describing all notes in the vault and the wiki-links between them. The graph page at `/vault/:id/graph` renders this data with Cytoscape.js using a force-directed layout. Nodes are coloured and sized based on their in-degree. Clicking a node navigates to that note.
+
+### Command palette
+
+The command palette opens on `Cmd+K` / `Ctrl+K`. It combines a live search of vault notes with static commands registered by the application (and by plugins). Results are rendered with `cmdk`. The palette uses a debounced fetch to `GET /api/search` so network requests are minimised while typing.
+
+### Plugin system
+
+Plugins are ESM bundles loaded at startup from URLs stored in the `UserPlugin` table. The loader in `apps/web/src/lib/plugins/loader.ts` validates each URL against an allow-list (same-origin is always allowed; additional origins are added through `NEXT_PUBLIC_PLUGIN_ALLOWLIST`). Each bundle must export a named `plugin` export conforming to `PluginDefinition` from `packages/shared`. On activation the loader calls `plugin.activate(ctx)` where `ctx` is a `PluginContext` instance that wires registrations into the `pluginRegistry` singleton. The registry is shared by the `StatusBar` and `CommandPalette` components. Settings at `/settings/plugins` let users add, disable, and remove plugin URLs.
+
+### Dark mode
+
+User theme preference (`light`, `dark`, or `system`) is stored in `User.themePreference`. The preference is written through `PATCH /api/me/theme` and read via a server component so the correct class is applied before the first paint, avoiding a flash of unstyled content. The `ThemeToggle` component in the top navigation bar cycles between the three options.

@@ -1,0 +1,33 @@
+:root[data-theme="light"] {
+  --bg: #ffffff;
+  --fg: #111827;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --accent: #2563eb;
+  --mark-bg: #fef3c7;
+}
+
+:root[data-theme="dark"] {
+  --bg: #0b0f17;
+  --fg: #e5e7eb;
+  --muted: #9ca3af;
+  --border: #1f2937;
+  --accent: #60a5fa;
+  --mark-bg: #78350f;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+mark {
+  background: var(--mark-bg);
+  color: inherit;
+}
+
+.cm-tag-pill {
+  background: var(--mark-bg);
+  border-radius: 4px;
+  padding: 0 3px;
+}

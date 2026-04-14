@@ -1,4 +1,5 @@
 import "./globals.css";
+import "@/styles/theme.css";
 import type { ReactNode } from "react";
 import { Providers } from "./providers";
 
@@ -10,6 +11,13 @@ export const metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('km:theme');if(!t||t==='system')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body>
         <Providers>
           <header className="border-b p-2 flex gap-3 text-sm">

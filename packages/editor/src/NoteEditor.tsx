@@ -8,6 +8,7 @@ import { wikiLinkField } from './wikiLinkField';
 import { wikiLinkExtension, WikiLinkContext } from './wikiLinkExtension';
 import { wikiLinkAutocomplete, WikiSearchResult } from './wikiLinkAutocomplete';
 import { livePreview } from './livePreview';
+import { tagHighlight } from './tagHighlight';
 
 export interface NoteEditorProps {
   initialValue: string;
@@ -85,6 +86,7 @@ export function NoteEditor(props: NoteEditorProps) {
         }),
         wikiLinkAutocomplete({ search: (q) => searchTitlesRef.current(q) }),
         livePreview,
+        tagHighlight(),
         listener,
         dropHandler,
         EditorView.lineWrapping,
