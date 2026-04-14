@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   output: "standalone",
-  transpilePackages: ["@km/db", "@km/shared"],
+  transpilePackages: ["@km/db", "@km/shared", "@km/editor", "@km/diagrams", "@km/ai"],
   experimental: {
     serverActions: { allowedOrigins: ["localhost:3000"] },
   },

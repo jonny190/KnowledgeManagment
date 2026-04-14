@@ -63,7 +63,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @km/db exec prisma generate
       - run: pnpm --filter @km/db exec prisma migrate deploy
-      - run: pnpm test
+      - run: pnpm exec turbo run test --concurrency=1
 
   integration:
     name: Integration tests
