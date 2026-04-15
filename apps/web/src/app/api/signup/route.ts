@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { signupSchema } from "@km/shared";
 import { signupWithCredentials } from "@/lib/signup";
+import { enqueueSendEmail } from "@/lib/email-jobs";
 
 export async function POST(req: Request) {
   let body: unknown;
@@ -14,6 +15,11 @@ export async function POST(req: Request) {
   try {
     const parsed = signupSchema.parse(body);
     const { user } = await signupWithCredentials(parsed);
+    try {
+      await enqueueSendEmail({ kind: "VERIFY_EMAIL", userId: user.id });
+    } catch (err) {
+      console.error("[signup] failed to enqueue verify email", err);
+    }
     return NextResponse.json({ id: user.id, email: user.email }, { status: 201 });
   } catch (err) {
     if (err instanceof ZodError) {

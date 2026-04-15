@@ -71,6 +71,40 @@ export async function tagNote(noteId: string, vaultId: string, tagName: string) 
 }
 
 /**
+ * Create a bare user row with optional overrides. Useful for auth-layer tests
+ * that need a User but do not need a full vault + folder scaffold.
+ */
+export async function createUser(
+  overrides: Partial<{
+    email: string;
+    name: string;
+    password: string;
+    emailVerified: Date | null;
+  }> = {},
+) {
+  const { email, name, emailVerified, password } = {
+    email: `user-${randomUUID()}@test.local`,
+    name: "Test User",
+    emailVerified: undefined,
+    password: undefined,
+    ...overrides,
+  };
+  let passwordHash: string | undefined;
+  if (password) {
+    const { hash } = await import("bcryptjs");
+    passwordHash = await hash(password, 12);
+  }
+  return prisma.user.create({
+    data: {
+      email,
+      name,
+      ...(passwordHash !== undefined ? { passwordHash } : {}),
+      ...(emailVerified !== undefined ? { emailVerified } : {}),
+    },
+  });
+}
+
+/**
  * Mock the next-auth session so requireUserId() returns the given userId.
  * Pass null to simulate an unauthenticated request.
  */
