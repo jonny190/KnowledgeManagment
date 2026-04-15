@@ -42,9 +42,10 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, user }) {
-      // On first sign-in, user is available. Persist the id to the token.
+      // On first sign-in, user is available. Persist the id and emailVerified to the token.
       if (user) {
         token.id = user.id;
+        token.emailVerified = (user as { emailVerified?: Date | null }).emailVerified?.toISOString() ?? null;
       }
       return token;
     },
@@ -52,6 +53,8 @@ export const authOptions: NextAuthOptions = {
       if (session.user && token.id) {
         (session.user as { id?: string }).id = token.id as string;
       }
+      (session.user as { emailVerified?: string | null }).emailVerified =
+        (token as { emailVerified?: string | null }).emailVerified ?? null;
       return session;
     },
   },
