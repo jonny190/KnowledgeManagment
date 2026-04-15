@@ -16,7 +16,7 @@ describe("GraphEmailProvider", () => {
     __resetGraphCacheForTests();
   });
 
-  afterEach(() => vi.restoreAllMocks());
+  afterEach(() => { vi.restoreAllMocks(); });
 
   it("acquires a token and sends via /sendMail", async () => {
     const fetchMock = vi.fn()
