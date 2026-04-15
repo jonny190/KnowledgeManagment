@@ -3,7 +3,7 @@ import { prisma } from "@km/db";
 import { requireUserId } from "@/lib/session";
 import { enqueueSendEmail } from "@/lib/email-jobs";
 
-export async function POST() {
+export async function POST(_req?: Request) {
   const userId = await requireUserId();
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (user && !user.emailVerified) {

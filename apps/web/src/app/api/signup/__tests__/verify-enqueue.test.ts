@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
-const sendMock = vi.fn(async () => "job-1");
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const sendMock = vi.fn(async (..._args: any[]) => "job-1");
 vi.mock("@/lib/queue", () => ({
   getBoss: vi.fn(async () => ({ send: sendMock })),
   enqueueExportVault: vi.fn(),
