@@ -54,16 +54,21 @@ test("graph renders nodes and edges", async ({ page }) => {
   await editorContent.waitFor({ state: "visible", timeout: 10000 });
   await editorContent.click();
   await page.keyboard.type("links to [[B]] and also mentions B");
-  await page.waitForRequest(
-    (req) => req.url().includes(`/api/notes/${noteAId}`) && req.method() === "PATCH",
-    { timeout: 10000 },
-  );
+  // Phase 2: realtime snapshot pipeline persists content after 5s debounce.
+  await page.waitForTimeout(7000);
 
   // 6. Navigate to the graph page
   await page.goto(`/vault/${vaultId}/graph`);
 
-  // 7. Assert a canvas element is present (Cytoscape uses canvas)
-  await page.waitForSelector("canvas", { timeout: 15000 });
+  // 7. Assert Cytoscape mounted. It creates multiple canvases; wait for any
+  //    of them to have a non-zero rendered height.
+  await page.waitForFunction(
+    () => {
+      const canvases = Array.from(document.querySelectorAll("canvas"));
+      return canvases.some((c) => c.height > 0);
+    },
+    { timeout: 15000 },
+  );
   const canvasCount = await page.evaluate(() => document.querySelectorAll("canvas").length);
   expect(canvasCount).toBeGreaterThan(0);
 
@@ -72,9 +77,9 @@ test("graph renders nodes and edges", async ({ page }) => {
   expect(graphResp.status()).toBe(200);
   const graphBody = await graphResp.json();
   expect(graphBody.nodes.length).toBeGreaterThanOrEqual(2);
-  const nodeTitles = graphBody.nodes.map((n: { title: string }) => n.title);
-  expect(nodeTitles).toContain("A");
-  expect(nodeTitles).toContain("B");
+  const nodeLabels = graphBody.nodes.map((n: { label: string }) => n.label);
+  expect(nodeLabels).toContain("A");
+  expect(nodeLabels).toContain("B");
 
   // Suppress unused variable warnings
   void noteBId;

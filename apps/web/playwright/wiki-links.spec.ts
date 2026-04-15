@@ -63,14 +63,21 @@ test('create two notes, link B to A, see backlink, click to navigate', async ({ 
   await editorContent.click();
   await page.keyboard.type('prelude [[Alpha]] epilogue');
 
-  // 9. Wait for autosave: debounce fires at 1.5s, then PATCH runs.
-  //    Wait for the PATCH request to complete (autosave) rather than checking transient text.
-  await page.waitForRequest(
-    (req) => req.url().includes(`/api/notes/${betaId}`) && req.method() === 'PATCH',
-    { timeout: 8000 },
-  );
-  // "Saved" should be visible after the autosave completes
-  await expect(page.locator('header').last().getByText('Saved')).toBeVisible({ timeout: 3000 });
+  // 9. Phase 2: content is written by the realtime service via Yjs. The
+  //    snapshot debounce fires 5s after the last edit, then writes Note.content
+  //    and recomputes links in a transaction. Poll the backlinks endpoint for
+  //    Beta until it appears (or fail after 15s).
+  await expect
+    .poll(
+      async () => {
+        const r = await page.request.get(`/api/notes/${alphaId}/backlinks`);
+        if (!r.ok()) return 0;
+        const body = (await r.json()) as { backlinks?: Array<{ sourceTitle: string }> };
+        return body.backlinks?.some((b) => b.sourceTitle === 'Beta') ? 1 : 0;
+      },
+      { timeout: 15000, intervals: [500, 1000, 2000] },
+    )
+    .toBe(1);
 
   // 10. Navigate to Alpha's note page
   await page.goto(`/vault/${vaultId}/note/${alphaId}`);

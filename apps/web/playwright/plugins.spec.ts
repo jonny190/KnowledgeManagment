@@ -57,11 +57,9 @@ test("wordcount plugin updates status bar on save", async ({ page, baseURL }) =>
   await editorContent.click();
   await page.keyboard.type("one two three four five");
 
-  // 7. Wait for autosave then check status bar shows word count
-  await page.waitForRequest(
-    (req) => req.url().includes(`/api/notes/${noteId}`) && req.method() === "PATCH",
-    { timeout: 10000 },
-  );
+  // 7. Wait briefly for the wordcount plugin to observe the editor change
+  //    (it subscribes to local Y.Doc updates, not server autosave).
+  await page.waitForTimeout(1000);
 
   // 8. Assert the status bar shows the word count
   await expect(page.locator("text=5 words")).toBeVisible({ timeout: 5000 });

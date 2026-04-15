@@ -161,7 +161,7 @@ export default function GraphPage() {
           Reset layout
         </button>
       </div>
-      <div ref={ref} className="flex-1" />
+      <div ref={ref} className="flex-1" style={{ minHeight: "70vh" }} />
     </div>
   );
 }

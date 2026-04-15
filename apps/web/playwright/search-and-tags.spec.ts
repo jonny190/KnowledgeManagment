@@ -55,10 +55,8 @@ test("search palette finds a note, tag sidebar filters correctly", async ({ page
   await editorAlpha.waitFor({ state: "visible", timeout: 10000 });
   await editorAlpha.click();
   await page.keyboard.type("introductory text with #draft");
-  await page.waitForRequest(
-    (req) => req.url().includes(`/api/notes/${alphaId}`) && req.method() === "PATCH",
-    { timeout: 10000 },
-  );
+  // Phase 2: realtime snapshot pipeline persists content after 5s debounce.
+  await page.waitForTimeout(7000);
 
   // 7. Write content into BravoDistinctive containing #draft
   await page.goto(`/vault/${vaultId}/note/${bravoId}`);
@@ -67,10 +65,7 @@ test("search palette finds a note, tag sidebar filters correctly", async ({ page
   await editorBravo.waitFor({ state: "visible", timeout: 10000 });
   await editorBravo.click();
   await page.keyboard.type("a bravo note mentioning #draft");
-  await page.waitForRequest(
-    (req) => req.url().includes(`/api/notes/${bravoId}`) && req.method() === "PATCH",
-    { timeout: 10000 },
-  );
+  await page.waitForTimeout(7000);
 
   // 8. Use search API to confirm BravoDistinctive is searchable
   const searchResp = await page.request.get(
@@ -90,7 +85,7 @@ test("search palette finds a note, tag sidebar filters correctly", async ({ page
   expect(draftTag.count).toBeGreaterThanOrEqual(2);
 
   // 10. Navigate to search page and verify Bravo appears in results
-  await page.goto(`/vault/${vaultId}/search?q=bravo`);
+  await page.goto(`/search?vaultId=${vaultId}&q=bravo`);
   await expect(page.locator("text=BravoDistinctive")).toBeVisible({ timeout: 10000 });
 
   // 11. Navigate to tag index page and verify both notes appear under #draft

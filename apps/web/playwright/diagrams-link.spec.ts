@@ -47,10 +47,9 @@ test('wiki-link from a note navigates to a diagram', async ({ page }) => {
   await editorContent.click();
   await page.keyboard.type('see [[My Diagram]]');
 
-  await page.waitForRequest(
-    (req) => req.url().includes(`/api/notes/${noteId}`) && req.method() === 'PATCH',
-    { timeout: 8000 },
-  );
+  // Phase 2: note content is persisted by the realtime snapshot pipeline
+  // after a 5s idle debounce. Wait for the Link rows to reflect.
+  await page.waitForTimeout(7000);
 
   const resolvedToken = page.locator('.cm-wiki-link:not(.cm-wiki-link-unresolved)', {
     hasText: 'My Diagram',

@@ -9,6 +9,7 @@ import { CreateNoteDialog } from '@/components/CreateNoteDialog';
 import { useCollabSession } from '@/components/CollabSession';
 import { ActiveUsers } from '@/components/ActiveUsers';
 import { AiChatPanel } from '@/components/AiChatPanel';
+import { pluginRegistry } from '@/lib/plugins/registry';
 
 interface NotePageProps {
   params: { vaultId: string; noteId: string };
@@ -49,18 +50,12 @@ export default function NotePage({ params }: NotePageProps) {
 
   useEffect(() => {
     if (!note) return;
-    type TreeNode = { id: string; name: string; children: TreeNode[]; notes: { id: string; title: string }[] };
-    function collectNotes(node: TreeNode): { id: string; title: string }[] {
-      return [
-        ...node.notes,
-        ...node.children.flatMap(collectNotes),
-      ];
-    }
+    type TreeItem = { kind: "note" | "drawio" | "bpmn"; id: string; title: string };
     fetch(`/api/vaults/${note.vaultId}/tree`)
       .then((r) => r.json())
-      .then((body: { root: TreeNode }) => {
-        const allNotes = collectNotes(body.root);
-        setTitleMap(new Map(allNotes.map((n) => [n.title, n.id])));
+      .then((body: { items?: TreeItem[]; notes?: { id: string; title: string }[] }) => {
+        const items = body.items ?? body.notes?.map((n) => ({ kind: "note" as const, id: n.id, title: n.title })) ?? [];
+        setTitleMap(new Map(items.map((n) => [n.title, n.id])));
       });
   }, [note]);
 
@@ -70,6 +65,28 @@ export default function NotePage({ params }: NotePageProps) {
     : null;
 
   const session = useCollabSession(note && collabUser ? params.noteId : "", collabUser ?? { id: "", name: "" });
+
+  // Notify plugin registry when the note is opened and every time the Y.Text
+  // changes. Plugins that subscribe to onNoteSave (e.g. the wordcount example)
+  // react to client-side edits here since Phase 2 removed the server-side
+  // autosave PATCH.
+  useEffect(() => {
+    if (!note || !session?.ytext) return;
+    const ytext = session.ytext;
+    pluginRegistry.emitNoteOpen({ id: note.id, title: note.title });
+    const emit = () => {
+      pluginRegistry.emitNoteSave({
+        id: note.id,
+        title: note.title,
+        content: ytext.toString(),
+      });
+    };
+    emit();
+    ytext.observe(emit);
+    return () => {
+      ytext.unobserve(emit);
+    };
+  }, [note, session?.ytext]);
 
   const resolveTitle = useCallback(
     (title: string) => {

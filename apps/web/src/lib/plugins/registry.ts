@@ -10,13 +10,28 @@ export class PluginRegistry {
   noteSave: Bucket<(n: { id: string; title: string; content: string }) => void> = new Map();
 
   private counter = 0;
+  revision = 0;
+  private listeners = new Set<() => void>();
+
+  subscribe(cb: () => void) {
+    this.listeners.add(cb);
+    return () => {
+      this.listeners.delete(cb);
+    };
+  }
+  private bump() {
+    this.revision += 1;
+    for (const cb of this.listeners) cb();
+  }
 
   private addToBucket<T>(bucket: Bucket<T>, pluginId: string, item: T): Disposable {
     const key = `${pluginId}:${++this.counter}`;
     bucket.set(key, { pluginId, item });
+    this.bump();
     return {
       dispose: () => {
         bucket.delete(key);
+        this.bump();
       },
     };
   }
@@ -39,9 +54,11 @@ export class PluginRegistry {
 
   emitNoteOpen(note: { id: string; title: string }) {
     for (const { item } of this.noteOpen.values()) item(note);
+    this.bump();
   }
   emitNoteSave(note: { id: string; title: string; content: string }) {
     for (const { item } of this.noteSave.values()) item(note);
+    this.bump();
   }
 }
 

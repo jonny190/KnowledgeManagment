@@ -2,31 +2,19 @@
 import React, { useSyncExternalStore } from "react";
 import { pluginRegistry } from "@/lib/plugins/registry";
 
-let cachedSize = -1;
-let cachedSnapshot: ReturnType<typeof buildSnapshot> = [];
-
-function buildSnapshot() {
-  return [...pluginRegistry.statusItems.values()];
-}
-
-function snapshot() {
-  const size = pluginRegistry.statusItems.size;
-  if (size !== cachedSize) {
-    cachedSize = size;
-    cachedSnapshot = buildSnapshot();
-  }
-  return cachedSnapshot;
-}
-
 function subscribe(cb: () => void) {
-  const id = setInterval(() => {
-    if (pluginRegistry.statusItems.size !== cachedSize) cb();
-  }, 500);
-  return () => clearInterval(id);
+  return pluginRegistry.subscribe(cb);
+}
+function getRevision() {
+  return pluginRegistry.revision;
 }
 
 export function StatusBar() {
-  const items = useSyncExternalStore(subscribe, snapshot, snapshot);
+  // Re-render whenever the plugin registry notifies a change (registrations,
+  // disposals, or emitted note events). Returning a scalar revision keeps
+  // useSyncExternalStore's Object.is comparison stable otherwise.
+  useSyncExternalStore(subscribe, getRevision, getRevision);
+  const items = [...pluginRegistry.statusItems.values()];
   return (
     <div className="h-6 border-t border-[var(--border,#e5e7eb)] text-xs flex gap-4 px-3 items-center text-[var(--muted,#6b7280)]">
       {items.map(({ item }, i) => (

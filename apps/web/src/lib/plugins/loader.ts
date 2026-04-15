@@ -34,24 +34,33 @@ export async function loadPlugins(args: {
 }): Promise<LoadResult> {
   const loaded: LoadedPlugin[] = [];
   const errors: LoadError[] = [];
-  const importer = args.importer ?? ((u: string) => import(/* @vite-ignore */ u) as Promise<Record<string, unknown>>);
+  const importer =
+    args.importer ??
+    ((u: string) =>
+      import(/* @vite-ignore */ /* webpackIgnore: true */ u) as Promise<Record<string, unknown>>);
 
   for (const url of args.urls) {
     if (!isAllowed(url, args.origin, args.allowList)) {
+      console.warn(`[plugins] not allow-listed: ${url}`);
       errors.push({ url, error: "not-allow-listed" });
       continue;
     }
     try {
       const mod = await importer(url);
-      const parsed = pluginDefinitionSchema.parse(mod.plugin);
-      const ctx = makePluginContext(parsed as PluginDefinition, {
+      // Validate with zod, but invoke the ORIGINAL activate function.
+      // z.function() returns a wrapped function that swallows/reformats the
+      // callee, which breaks plugins that capture closure state.
+      pluginDefinitionSchema.parse(mod.plugin);
+      const original = mod.plugin as PluginDefinition;
+      const ctx = makePluginContext(original, {
         vaultId: args.vaultId,
         userId: args.userId,
       });
-      await parsed.activate(ctx);
-      loaded.push({ url, definition: parsed as PluginDefinition });
+      await original.activate(ctx);
+      loaded.push({ url, definition: original });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "load-failed";
+      console.error(`[plugins] load error for ${url}:`, msg);
       errors.push({ url, error: msg });
     }
   }

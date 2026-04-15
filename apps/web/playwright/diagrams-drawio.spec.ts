@@ -49,12 +49,16 @@ test('create, edit, and persist a drawio diagram', async ({ page }) => {
     '</mxCell>' +
     '</root></mxGraphModel></diagram></mxfile>';
 
+  // Simulate the drawio iframe posting up to the parent with the saved xml.
   await page.evaluate(
     ({ xml }) => {
       const iframe = document.querySelector<HTMLIFrameElement>('iframe[title="drawio editor"]');
-      iframe?.contentWindow?.postMessage(
-        JSON.stringify({ event: 'save', xml }),
-        window.location.origin,
+      window.dispatchEvent(
+        new MessageEvent('message', {
+          data: JSON.stringify({ event: 'save', xml }),
+          origin: window.location.origin,
+          source: iframe?.contentWindow ?? undefined,
+        }),
       );
     },
     { xml: saveXml },
