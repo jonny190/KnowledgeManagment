@@ -71,7 +71,15 @@ describe("realtime integration", () => {
     await prisma.noteDoc.deleteMany({});
     await prisma.realtimeGrant.deleteMany({});
     await prisma.note.deleteMany({});
+    await prisma.attachment.deleteMany({});
+    await prisma.folder.deleteMany({});
+    await prisma.exportJob.deleteMany({});
     await prisma.vault.deleteMany({});
+    await prisma.invite.deleteMany({});
+    await prisma.membership.deleteMany({});
+    await prisma.workspace.deleteMany({});
+    await prisma.session.deleteMany({});
+    await prisma.account.deleteMany({});
     await prisma.user.deleteMany({});
     server = await startServer(PORT);
   });
@@ -80,7 +88,10 @@ describe("realtime integration", () => {
     await server.destroy();
   });
 
-  it.skipIf(process.env.CI)("two clients converge and a snapshot updates Note.content + Link", async () => {
+  // This test exercises two in-process Yjs providers over localhost WS plus
+  // a Postgres round-trip. Intermittent WS handshake timing on shared runners
+  // (local dev or CI) can exceed the waitFor budget; retry once.
+  it("two clients converge and a snapshot updates Note.content + Link", { retry: 2 }, async () => {
     const { note, token } = await seed();
 
     const docA = new Y.Doc();

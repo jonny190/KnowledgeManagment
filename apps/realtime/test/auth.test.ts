@@ -31,8 +31,18 @@ function sign(payload: object) {
 describe("verifyRealtimeToken", () => {
   beforeEach(async () => {
     await prisma.realtimeGrant.deleteMany({});
+    await prisma.noteDoc.deleteMany({});
+    await prisma.link.deleteMany({});
     await prisma.note.deleteMany({});
+    await prisma.attachment.deleteMany({});
+    await prisma.folder.deleteMany({});
+    await prisma.exportJob.deleteMany({});
     await prisma.vault.deleteMany({});
+    await prisma.invite.deleteMany({});
+    await prisma.membership.deleteMany({});
+    await prisma.workspace.deleteMany({});
+    await prisma.session.deleteMany({});
+    await prisma.account.deleteMany({});
     await prisma.user.deleteMany({});
   });
 

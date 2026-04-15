@@ -30,10 +30,19 @@ function makeDoc(text: string): Y.Doc {
 describe("snapshotNote", () => {
   beforeEach(async () => {
     __clearDocProvider();
+    await prisma.realtimeGrant.deleteMany({});
     await prisma.link.deleteMany({});
     await prisma.noteDoc.deleteMany({});
     await prisma.note.deleteMany({});
+    await prisma.attachment.deleteMany({});
+    await prisma.folder.deleteMany({});
+    await prisma.exportJob.deleteMany({});
     await prisma.vault.deleteMany({});
+    await prisma.invite.deleteMany({});
+    await prisma.membership.deleteMany({});
+    await prisma.workspace.deleteMany({});
+    await prisma.session.deleteMany({});
+    await prisma.account.deleteMany({});
     await prisma.user.deleteMany({});
   });
 

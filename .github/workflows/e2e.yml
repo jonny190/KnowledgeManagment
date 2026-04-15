@@ -47,7 +47,6 @@ jobs:
       - run: pnpm --filter @km/web build
       - run: pnpm --filter @km/web exec playwright install --with-deps chromium
       - name: Playwright tests
-        continue-on-error: true
         env:
           AI_PROVIDER: stub
           ANTHROPIC_API_KEY: stub-key-not-used

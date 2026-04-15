@@ -6,6 +6,9 @@ export default defineConfig({
     include: ["test/**/*.test.ts"],
     testTimeout: 30000,
     pool: "forks",
-    poolOptions: { forks: { singleFork: true } },
+    // One file per fork, run sequentially. yjs mis-detects itself as
+    // "already imported" when multiple test files share a process, which
+    // breaks the integration test's CRDT convergence.
+    fileParallelism: false,
   },
 });
