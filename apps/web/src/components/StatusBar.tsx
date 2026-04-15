@@ -2,12 +2,27 @@
 import React, { useSyncExternalStore } from "react";
 import { pluginRegistry } from "@/lib/plugins/registry";
 
-function subscribe(cb: () => void) {
-  const id = setInterval(cb, 500);
-  return () => clearInterval(id);
-}
-function snapshot() {
+let cachedSize = -1;
+let cachedSnapshot: ReturnType<typeof buildSnapshot> = [];
+
+function buildSnapshot() {
   return [...pluginRegistry.statusItems.values()];
+}
+
+function snapshot() {
+  const size = pluginRegistry.statusItems.size;
+  if (size !== cachedSize) {
+    cachedSize = size;
+    cachedSnapshot = buildSnapshot();
+  }
+  return cachedSnapshot;
+}
+
+function subscribe(cb: () => void) {
+  const id = setInterval(() => {
+    if (pluginRegistry.statusItems.size !== cachedSize) cb();
+  }, 500);
+  return () => clearInterval(id);
 }
 
 export function StatusBar() {
