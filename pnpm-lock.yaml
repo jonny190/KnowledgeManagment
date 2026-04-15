@@ -99,6 +99,9 @@ importers:
       '@km/editor':
         specifier: workspace:*
         version: link:../../packages/editor
+      '@km/email':
+        specifier: workspace:*
+        version: link:../../packages/email
       '@km/shared':
         specifier: workspace:*
         version: link:../../packages/shared

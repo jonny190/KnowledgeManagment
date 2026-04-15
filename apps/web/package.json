@@ -17,6 +17,7 @@
     "@hocuspocus/provider": "2.13.5",
     "@km/ai": "workspace:*",
     "@km/db": "workspace:*",
+    "@km/email": "workspace:*",
     "@km/diagrams": "workspace:*",
     "@km/editor": "workspace:*",
     "@km/shared": "workspace:*",
