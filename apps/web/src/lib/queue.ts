@@ -3,7 +3,7 @@ import { EXPORT_VAULT_QUEUE, type ExportVaultPayload } from "@km/worker/src/jobs
 
 let bossPromise: Promise<PgBoss> | null = null;
 
-function getBoss(): Promise<PgBoss> {
+export function getBoss(): Promise<PgBoss> {
   if (bossPromise) return bossPromise;
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) throw new Error("DATABASE_URL required for queue");
