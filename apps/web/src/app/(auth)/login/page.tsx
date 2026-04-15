@@ -9,6 +9,11 @@ export default function LoginPage() {
       <p>
         No account yet? <Link href="/signup">Sign up</Link>
       </p>
+      <p>
+        <a href="/forgot" className="text-sm text-blue-600 underline">
+          Forgot password?
+        </a>
+      </p>
     </main>
   );
 }
