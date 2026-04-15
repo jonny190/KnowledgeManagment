@@ -1,7 +1,12 @@
+import { writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { PrismaClient } from "@prisma/client";
 import { hash } from "bcryptjs";
 
 const ts = Date.now();
+
+export const COLLAB_SEED_PATH = path.join(tmpdir(), "km-collab-seed.json");
 
 export interface CollabSeedData {
   userA: { email: string; password: string };
@@ -92,8 +97,19 @@ export default async function globalSetup(): Promise<void> {
       noteId: note.id,
     };
 
-    // Expose to test files via the global object.
-    (global as unknown as Record<string, unknown>)["__km_seeded_collab"] = seed;
+    // Persist to a temp file so worker processes can read it.
+    writeFileSync(COLLAB_SEED_PATH, JSON.stringify(seed), "utf8");
+
+    // Warm the Next.js dev server by hitting the auth pages so the first
+    // real test does not time out on first-compile latency.
+    const base = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+    for (const path of ["/signup", "/login", "/", "/api/auth/csrf"]) {
+      try {
+        await fetch(`${base}${path}`, { redirect: "manual" });
+      } catch {
+        // best effort
+      }
+    }
   } finally {
     await prisma.$disconnect();
   }

@@ -1,10 +1,9 @@
+import { readFileSync } from "node:fs";
 import { test, expect } from "@playwright/test";
-import type { CollabSeedData } from "./global-setup";
+import { COLLAB_SEED_PATH, type CollabSeedData } from "./global-setup";
 
 test("two browser contexts converge and show each other in ActiveUsers", async ({ browser }) => {
-  const seeded = (global as unknown as Record<string, unknown>)[
-    "__km_seeded_collab"
-  ] as CollabSeedData;
+  const seeded = JSON.parse(readFileSync(COLLAB_SEED_PATH, "utf8")) as CollabSeedData;
 
   const contextA = await browser.newContext();
   const contextB = await browser.newContext();
