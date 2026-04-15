@@ -62,6 +62,14 @@ The `packages/diagrams` package owns all diagram UI code and lives next to the o
 
 **Export.** The vault export worker includes diagrams in the zip archive alongside notes. Each drawio diagram is written as a `.drawio` file and each BPMN diagram as a `.bpmn` file, preserving the folder structure of the vault.
 
+## Email
+
+Outbound email is abstracted behind `@km/email`. The `sendEmail(payload)` function picks a provider based on `EMAIL_PROVIDER`. In `console` mode it logs the rendered message and returns a stub id. In `graph` mode it acquires a Microsoft Graph client-credentials access token (cached in process until one minute before expiry) and calls `POST /users/{mailbox}/sendMail`.
+
+Web routes never call `sendEmail` directly. They insert any required rows (for example an `Invite` or a pending signup) and enqueue a `send-email` job on the existing pg-boss queue. The worker consumes the job, generates and persists an `EmailToken` (for VERIFY_EMAIL and PASSWORD_RESET), enforces a per `(email, kind)` rate limit of three sends per ten minutes, and invokes the provider. Terminal Graph errors (401, 403) fail the job without retry; 429 and 5xx responses rely on pg-boss backoff.
+
+The `EmailToken` table stores sha256 hashes of raw tokens only. The raw token is included in the email link and is never persisted. Consuming a token computes the hash, looks up the row, checks expiry and `consumedAt`, then sets `consumedAt` and updates the relevant user field in the same transaction.
+
 ## Phase 5 polish
 
 Phase 5 added full-text search, a tag system, a knowledge graph, a command palette, a plugin system, and dark mode. The detailed specification lives at `docs/superpowers/plans/2026-04-13-phase5-polish.md`.

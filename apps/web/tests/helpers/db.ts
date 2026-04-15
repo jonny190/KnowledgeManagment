@@ -20,10 +20,15 @@ export async function resetDb() {
   ]);
 }
 
-export async function createUser(overrides: { email?: string; name?: string } = {}) {
+export async function createUser(overrides: { email?: string; name?: string; emailVerified?: Date | null } = {}) {
   const email = overrides.email ?? `user-${randomUUID()}@test.local`;
+  const emailVerified = "emailVerified" in overrides ? overrides.emailVerified : new Date();
   const user = await prisma.user.create({
-    data: { email, name: overrides.name ?? "Test User" },
+    data: {
+      email,
+      name: overrides.name ?? "Test User",
+      ...(emailVerified !== undefined ? { emailVerified } : {}),
+    },
   });
   const vault = await prisma.vault.create({
     data: { ownerType: "USER", ownerId: user.id, name: "Personal" },

@@ -25,6 +25,7 @@ model User {
   aiConversations AiConversation[]
   aiUsage         AiUsage[]
   plugins     UserPlugin[]
+  emailTokens EmailToken[]
 }
 
 model Account {
@@ -110,6 +111,7 @@ model Invite {
   id          String         @id @default(cuid())
   workspaceId String
   email       String
+  token       String?        @unique
   tokenHash   String         @unique
   role        MembershipRole
   expiresAt   DateTime
@@ -401,4 +403,25 @@ model UserPlugin {
 
   @@unique([userId, url])
   @@index([userId])
+}
+
+enum EmailTokenKind {
+  VERIFY_EMAIL
+  PASSWORD_RESET
+}
+
+model EmailToken {
+  id         String         @id @default(cuid())
+  userId     String
+  email      String
+  kind       EmailTokenKind
+  tokenHash  String         @unique
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime       @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([email, kind])
+  @@index([expiresAt])
 }

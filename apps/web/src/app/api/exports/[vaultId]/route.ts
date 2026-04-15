@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { prisma } from "@km/db";
 import { requireUserId } from "@/lib/session";
 import { createExport } from "@/lib/exports/create";
 import { AuthzError } from "@/lib/authz";
@@ -12,6 +13,11 @@ export async function POST(
     userId = await requireUserId();
   } catch {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  const me = await prisma.user.findUnique({ where: { id: userId } });
+  if (!me?.emailVerified) {
+    return NextResponse.json({ reason: "verify_email_required" }, { status: 403 });
   }
 
   try {

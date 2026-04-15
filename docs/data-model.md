@@ -110,6 +110,25 @@ Stores the list of plugin URLs a user has registered.
 
 The `(userId, url)` pair is unique. Adding a URL that already exists re-enables it rather than creating a duplicate.
 
+## EmailToken
+
+Stores hashed one-time tokens for the email verification and password reset flows. Invite tokens are not stored here; they continue to live on the `Invite` row as a hashed value.
+
+| Column | Purpose |
+| --- | --- |
+| id | cuid primary key |
+| userId | owner of the token; FK to User, cascade delete |
+| email | destination address captured at issue time |
+| kind | `VERIFY_EMAIL` or `PASSWORD_RESET` |
+| tokenHash | sha256 hex of the raw token; unique across the table |
+| expiresAt | absolute expiry (24 hours for VERIFY_EMAIL, 1 hour for PASSWORD_RESET) |
+| consumedAt | null until the token is used; set in the same transaction that applies the effect |
+| createdAt | creation timestamp |
+
+`User.emailVerified` is the NextAuth-standard nullable DateTime field. It is set when a `VERIFY_EMAIL` token is consumed successfully. Routes that require a verified address (vault export trigger, password change) check this field and return a 403 with a machine-readable code when it is null.
+
+`Invite.token` stores the sha256 hash of the raw invite token. The raw token is delivered in the invite email and is not stored. When a user opens the accept URL the hash is compared against the row and, on match, the membership record is created.
+
 ## AI integration tables
 
 - `AiConversation` - one per `(vaultId, noteId, userId)` pairing in v1. `noteId` is nullable for future vault-wide chats. Cascades from vault delete; nulls on note delete.

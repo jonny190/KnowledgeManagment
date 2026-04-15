@@ -7,7 +7,8 @@ vi.mock("@/lib/session", () => ({
   requireUserId: vi.fn(),
 }));
 
-const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+const sendMock = vi.fn(async () => "job-1");
+vi.mock("@/lib/queue", () => ({ getBoss: vi.fn(async () => ({ send: sendMock })) }));
 
 import { requireUserId } from "@/lib/session";
 import { POST as createInvite } from "@/app/api/workspaces/[id]/invites/route";
@@ -16,10 +17,10 @@ describe("POST /api/workspaces/:id/invites", () => {
   beforeEach(async () => {
     await resetDb();
     vi.mocked(requireUserId).mockReset();
-    logSpy.mockClear();
+    sendMock.mockClear();
   });
 
-  it("OWNER can invite; token is generated and email is logged", async () => {
+  it("OWNER can invite; token is generated and INVITE email is enqueued", async () => {
     const { user: owner } = await createUser();
     const { workspace } = await createWorkspaceFixture(owner.id);
     vi.mocked(requireUserId).mockResolvedValue(owner.id);
@@ -41,10 +42,13 @@ describe("POST /api/workspaces/:id/invites", () => {
     const rows = await prisma.invite.findMany({ where: { workspaceId: workspace.id } });
     expect(rows).toHaveLength(1);
     expect(rows[0].tokenHash).not.toBe(body.token);
+    expect(rows[0].token).toBe(body.token);
 
-    expect(logSpy).toHaveBeenCalled();
-    const logged = logSpy.mock.calls.flat().join(" ");
-    expect(logged).toContain("friend@test.local");
+    expect(sendMock).toHaveBeenCalledWith(
+      "send-email",
+      { kind: "INVITE", inviteId: rows[0].id },
+      expect.anything(),
+    );
   });
 
   it("MEMBER cannot invite (403)", async () => {

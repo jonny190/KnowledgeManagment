@@ -16,6 +16,7 @@ COPY packages/shared/package.json packages/shared/package.json
 COPY packages/editor/package.json packages/editor/package.json
 COPY packages/diagrams/package.json packages/diagrams/package.json
 COPY packages/ai/package.json packages/ai/package.json
+COPY packages/email/package.json packages/email/package.json
 COPY examples/plugins/wordcount/package.json examples/plugins/wordcount/package.json
 RUN pnpm install --frozen-lockfile
 
