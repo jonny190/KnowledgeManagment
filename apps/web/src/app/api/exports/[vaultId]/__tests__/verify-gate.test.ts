@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach, vi } from "vitest";
+import { describe, expect, it, beforeEach, vi, type MockInstance } from "vitest";
 import { prisma } from "@km/db";
 import { createUser } from "@/test/factories";
 
@@ -12,6 +12,8 @@ vi.mock("@/lib/session", () => ({ requireUserId: vi.fn() }));
 import { requireUserId } from "@/lib/session";
 import { POST } from "@/app/api/exports/[vaultId]/route";
 
+const requireUserIdMock = requireUserId as unknown as MockInstance;
+
 beforeEach(async () => {
   createExportMock.mockClear();
   await prisma.vault.deleteMany();
@@ -21,10 +23,10 @@ beforeEach(async () => {
 describe("export vault email-verified gate", () => {
   it("returns 403 verify_email_required when user has no verified email", async () => {
     const u = await createUser({ emailVerified: null });
-    (requireUserId as any).mockResolvedValue(u.id);
+    requireUserIdMock.mockResolvedValue(u.id);
     const res = await POST(new Request("http://x", { method: "POST" }), {
       params: { vaultId: "v-1" },
-    } as any);
+    } as Parameters<typeof POST>[1]);
     expect(res.status).toBe(403);
     const body = await res.json();
     expect(body.reason).toBe("verify_email_required");
@@ -33,10 +35,10 @@ describe("export vault email-verified gate", () => {
 
   it("proceeds past gate when user is verified", async () => {
     const u = await createUser({ emailVerified: new Date() });
-    (requireUserId as any).mockResolvedValue(u.id);
+    requireUserIdMock.mockResolvedValue(u.id);
     const res = await POST(new Request("http://x", { method: "POST" }), {
       params: { vaultId: "v-1" },
-    } as any);
+    } as Parameters<typeof POST>[1]);
     // createExport mock succeeds so expect 202
     expect(res.status).toBe(202);
     expect(createExportMock).toHaveBeenCalled();

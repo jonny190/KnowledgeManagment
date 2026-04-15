@@ -1,13 +1,10 @@
 import { test, expect } from "@playwright/test";
 
-// Minimum useful E2E: after signup the verify-email banner is visible.
-//
-// Full token-consumption flow requires a raw token that is never persisted
-// server-side (only the sha256 hash is stored). The banner-visibility
-// assertion is the meaningful observable: it confirms that the signup
-// flow correctly marks the user as unverified and the UI responds.
+// The VerifyEmailBanner lives in the (app) layout, which applies to routes
+// like /workspaces and /search but not to the public home page at /.
+// After signup we navigate to /workspaces so the banner is in scope.
 
-test("signup shows verify-email banner", async ({ page, request }) => {
+test("signup shows verify-email banner inside app layout", async ({ page }) => {
   const email = `e2e-verify-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`;
 
   await page.goto("/signup");
@@ -15,23 +12,23 @@ test("signup shows verify-email banner", async ({ page, request }) => {
   await page.getByLabel("Password").fill("e2e-password-1");
   await page.getByRole("button", { name: "Sign up" }).click();
 
-  await expect(page).toHaveURL("/");
+  // Signup redirects to / via window.location.href; wait for navigation.
+  await expect(page).toHaveURL("/", { timeout: 15_000 });
+
+  // Navigate into the (app) layout group where the banner is rendered.
+  await page.goto("/workspaces");
 
   // The banner should be visible because the new account has not verified its email.
   await expect(
-    page.getByText(/verify your email/i).first(),
+    page.getByText(/Please verify your email/i).first(),
   ).toBeVisible({ timeout: 10_000 });
 });
 
 test("verify-email page with invalid token returns error", async ({ page }) => {
+  // Should render an error state, not crash the application.
   await page.goto("/verify-email?token=invalid-token-that-does-not-exist");
 
-  // Should render an error state, not crash the application.
-  await expect(page).not.toHaveURL(/verify-email.*token=invalid/, { timeout: 5_000 }).catch(() => {
-    // Navigation may stay on the page with an error message — that is acceptable.
-  });
-
-  // The page should not show an unhandled error overlay.
+  // The page should load and display a body without unhandled error.
   const body = page.locator("body");
   await expect(body).toBeVisible();
 });

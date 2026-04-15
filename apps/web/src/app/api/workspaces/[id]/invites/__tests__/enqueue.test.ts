@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach, vi } from "vitest";
+import { describe, expect, it, beforeEach, vi, type MockInstance } from "vitest";
 import { prisma } from "@km/db";
 import { createUser } from "@/test/factories";
 
@@ -8,6 +8,8 @@ vi.mock("@/lib/session", () => ({ requireUserId: vi.fn() }));
 
 import { requireUserId } from "@/lib/session";
 import { POST } from "@/app/api/workspaces/[id]/invites/route";
+
+const requireUserIdMock = requireUserId as unknown as MockInstance;
 
 beforeEach(async () => {
   sendMock.mockClear();
@@ -26,7 +28,7 @@ describe("invite creation enqueues INVITE email", () => {
     await prisma.membership.create({
       data: { workspaceId: workspace.id, userId: me.id, role: "ADMIN" },
     });
-    (requireUserId as any).mockResolvedValue(me.id);
+    requireUserIdMock.mockResolvedValue(me.id);
 
     const res = await POST(
       new Request("http://x", {
@@ -34,7 +36,7 @@ describe("invite creation enqueues INVITE email", () => {
         body: JSON.stringify({ email: "guest@x.com", role: "MEMBER" }),
         headers: { "content-type": "application/json" },
       }),
-      { params: { id: workspace.id } } as any,
+      { params: { id: workspace.id } } as Parameters<typeof POST>[1],
     );
 
     expect(res.status).toBe(201);

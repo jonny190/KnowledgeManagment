@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, vi, beforeEach, type MockInstance } from "vitest";
 import { prisma } from "@km/db";
 import { createUser } from "@/test/factories";
 
@@ -7,6 +7,8 @@ vi.mock("@/lib/session", () => ({ requireUserId: vi.fn() }));
 import { requireUserId } from "@/lib/session";
 import { POST } from "@/app/api/me/password/route";
 
+const requireUserIdMock = requireUserId as unknown as MockInstance;
+
 beforeEach(async () => {
   await prisma.user.deleteMany();
 });
@@ -14,7 +16,7 @@ beforeEach(async () => {
 describe("password change gate", () => {
   it("returns 403 when unverified", async () => {
     const u = await createUser({ emailVerified: null });
-    (requireUserId as any).mockResolvedValue(u.id);
+    requireUserIdMock.mockResolvedValue(u.id);
     const res = await POST(new Request("http://x", {
       method: "POST",
       body: JSON.stringify({ currentPassword: "x", newPassword: "new-pw-12345" }),
@@ -27,7 +29,7 @@ describe("password change gate", () => {
 
   it("returns 400 wrong_password when current password is incorrect", async () => {
     const u = await createUser({ emailVerified: new Date(), password: "correct-pass" });
-    (requireUserId as any).mockResolvedValue(u.id);
+    requireUserIdMock.mockResolvedValue(u.id);
     const res = await POST(new Request("http://x", {
       method: "POST",
       body: JSON.stringify({ currentPassword: "wrong-pass", newPassword: "new-pw-12345" }),
@@ -40,7 +42,7 @@ describe("password change gate", () => {
 
   it("returns 200 and updates password when current password matches", async () => {
     const u = await createUser({ emailVerified: new Date(), password: "correct-pass" });
-    (requireUserId as any).mockResolvedValue(u.id);
+    requireUserIdMock.mockResolvedValue(u.id);
     const res = await POST(new Request("http://x", {
       method: "POST",
       body: JSON.stringify({ currentPassword: "correct-pass", newPassword: "new-pw-12345" }),
