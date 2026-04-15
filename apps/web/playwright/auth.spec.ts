@@ -1,9 +1,9 @@
 import { test, expect } from "@playwright/test";
 
-const EMAIL = `e2e-${Date.now()}@example.com`;
 const PASSWORD = "password123";
 
 test("signup, logout, login round trip", async ({ page }) => {
+  const EMAIL = `e2e-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`;
   await page.goto("/signup");
   await page.getByLabel("Email").fill(EMAIL);
   await page.getByLabel("Password").fill(PASSWORD);
