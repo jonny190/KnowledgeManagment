@@ -1,7 +1,7 @@
-import type { EmailProvider, SendEmailPayload, SendEmailResult } from "../types";
-import { renderVerify } from "../templates/verify";
-import { renderReset } from "../templates/reset";
-import { renderInvite } from "../templates/invite";
+import type { EmailProvider, SendEmailPayload, SendEmailResult } from "../types.js";
+import { renderVerify } from "../templates/verify.js";
+import { renderReset } from "../templates/reset.js";
+import { renderInvite } from "../templates/invite.js";
 
 export class ConsoleEmailProvider implements EmailProvider {
   async send(payload: SendEmailPayload): Promise<SendEmailResult> {

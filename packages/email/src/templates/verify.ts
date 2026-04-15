@@ -1,4 +1,4 @@
-import type { VerifyEmailData } from "../types";
+import type { VerifyEmailData } from "../types.js";
 
 export function renderVerify(data: VerifyEmailData) {
   const subject = "Verify your email";

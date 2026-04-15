@@ -1,9 +1,9 @@
-import type { EmailProvider, SendEmailPayload, SendEmailResult } from "./types";
-import { ConsoleEmailProvider } from "./providers/console";
-import { GraphEmailProvider } from "./providers/graph";
+import type { EmailProvider, SendEmailPayload, SendEmailResult } from "./types.js";
+import { ConsoleEmailProvider } from "./providers/console.js";
+import { GraphEmailProvider } from "./providers/graph.js";
 
-export * from "./types";
-export { hashToken, generateRawToken, isExpired } from "./tokens";
+export * from "./types.js";
+export { hashToken, generateRawToken, isExpired } from "./tokens.js";
 
 let cached: EmailProvider | null = null;
 

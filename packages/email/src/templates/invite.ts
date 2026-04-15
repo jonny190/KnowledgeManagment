@@ -1,4 +1,4 @@
-import type { InviteEmailData } from "../types";
+import type { InviteEmailData } from "../types.js";
 
 export function renderInvite(data: InviteEmailData) {
   const subject = `You were invited to ${data.workspaceName}`;

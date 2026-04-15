@@ -1,4 +1,4 @@
-import type { PasswordResetData } from "../types";
+import type { PasswordResetData } from "../types.js";
 
 export function renderReset(data: PasswordResetData) {
   const subject = "Reset your password";
