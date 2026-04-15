@@ -107,6 +107,18 @@ Required env vars on the web service:
 
 The Cloudflare proxy already supports Server-Sent Events. No proxy config changes are needed for the new endpoints (`/api/ai/chat`, `/api/ai/command`, `/api/ai/conversations`).
 
+## Email (v0.2-A)
+
+Outbound email is required for email verification, password reset, and workspace invite flows. Register an app in Microsoft Entra ID with the `Mail.Send` application permission and admin consent granted. Generate a client secret. Set these variables on the web and worker services:
+
+- `EMAIL_PROVIDER=graph` (use `console` in dev or CI; console mode logs the rendered message and does not send real mail)
+- `GRAPH_TENANT_ID` - the Entra directory tenant ID
+- `GRAPH_CLIENT_ID` - the registered application client ID
+- `GRAPH_CLIENT_SECRET` - the client secret value (not the secret ID)
+- `EMAIL_FROM_MAILBOX` - the UPN of a real mailbox the application can send as, e.g. `noreply@example.com`
+- `EMAIL_FROM_NAME` - optional display name shown in the From header, e.g. `Knowledge Management`
+- `APP_URL` - the public HTTPS root URL used to build links in emails, e.g. `https://knowledge.example.com`. This must match `NEXTAUTH_URL` without a trailing slash.
+
 ## Troubleshooting
 
 - `worker` restarts in a loop: check `DATABASE_URL` reachability and that the pg-boss schema has been created. pg-boss provisions its own schema on first run; if the Postgres user lacks `CREATE` permission, grant it.

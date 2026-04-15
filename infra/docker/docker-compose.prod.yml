@@ -35,6 +35,13 @@ services:
       DATA_DIR: /data
       REALTIME_JWT_SECRET: ${REALTIME_JWT_SECRET}
       NEXT_PUBLIC_REALTIME_URL: ${NEXT_PUBLIC_REALTIME_URL}
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER:-console}
+      GRAPH_TENANT_ID: ${GRAPH_TENANT_ID:-}
+      GRAPH_CLIENT_ID: ${GRAPH_CLIENT_ID:-}
+      GRAPH_CLIENT_SECRET: ${GRAPH_CLIENT_SECRET:-}
+      EMAIL_FROM_MAILBOX: ${EMAIL_FROM_MAILBOX:-}
+      EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-}
+      APP_URL: ${APP_URL:-}
     volumes:
       - appdata:/data
     ports:
@@ -53,6 +60,13 @@ services:
       NODE_ENV: production
       DATABASE_URL: postgres://kmgmt:${POSTGRES_PASSWORD}@postgres:5432/kmgmt
       DATA_DIR: /data
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER:-console}
+      GRAPH_TENANT_ID: ${GRAPH_TENANT_ID:-}
+      GRAPH_CLIENT_ID: ${GRAPH_CLIENT_ID:-}
+      GRAPH_CLIENT_SECRET: ${GRAPH_CLIENT_SECRET:-}
+      EMAIL_FROM_MAILBOX: ${EMAIL_FROM_MAILBOX:-}
+      EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-}
+      APP_URL: ${APP_URL:-}
     volumes:
       - appdata:/data
 
