@@ -36,6 +36,20 @@ The web service also needs `REALTIME_JWT_SECRET` and `NEXT_PUBLIC_REALTIME_URL`.
 
 Cloudflare: ensure WebSockets are enabled for the zone (Network settings), otherwise the upgrade request will be rejected and the browser will retry indefinitely.
 
+## Email (v0.2-A)
+
+Register an app in Microsoft Entra ID with the `Mail.Send` application permission granted by an admin. Generate a client secret. Configure these environment variables on both the web and worker services:
+
+- `EMAIL_PROVIDER=graph` (use `console` for local development and CI; console mode logs but does not send real mail)
+- `GRAPH_TENANT_ID` - the Entra directory tenant ID
+- `GRAPH_CLIENT_ID` - the registered application client ID
+- `GRAPH_CLIENT_SECRET` - the client secret value (not the secret ID)
+- `EMAIL_FROM_MAILBOX` - the UPN of a real mailbox the app can send as, e.g. `noreply@example.com`
+- `EMAIL_FROM_NAME` - optional display name shown in the From header
+- `APP_URL` - the public HTTPS root URL used to build links in emails, e.g. `https://knowledge.example.com`. Should match `NEXTAUTH_URL` without a trailing slash.
+
+The Entra application requires no redirect URIs (client-credentials flow only). Grant `Mail.Send` as an application permission and have an administrator grant consent. The app needs send-as access to the mailbox specified in `EMAIL_FROM_MAILBOX`.
+
 ## AI integration
 
 Required on the web service:
