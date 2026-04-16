@@ -109,3 +109,15 @@ Plugins are ESM bundles loaded at startup from URLs stored in the `UserPlugin` t
 ### Dark mode
 
 User theme preference (`light`, `dark`, or `system`) is stored in `User.themePreference`. The preference is written through `PATCH /api/me/theme` and read via a server component so the correct class is applied before the first paint, avoiding a flash of unstyled content. The `ThemeToggle` component in the top navigation bar cycles between the three options.
+
+## Responsive layout
+
+The web app is built desktop-first but collapses cleanly to phone widths.
+
+- Breakpoint: Tailwind's `md` (768px). Below it the UI is "mobile", at or above it is "desktop".
+- Primitives: `apps/web/src/components/Drawer.tsx` (generic off-canvas with backdrop, ESC, scroll lock, route-change auto-close) and `apps/web/src/components/MobileTopBar.tsx` (centred title, right-side icon buttons, `md:hidden` only).
+- Pointer detection: `apps/web/src/hooks/usePointerType.ts` returns `"mouse"` when `matchMedia("(hover: hover)")` matches, `"touch"` otherwise. It is SSR-safe.
+- Note page (`apps/web/src/app/(app)/vault/[vaultId]/note/[noteId]/page.tsx`): on desktop the file tree, backlinks, and AI chat are permanent columns. Below `md` all three move into drawers triggered from the top bar. The two right-side drawers are mutually exclusive by construction.
+- File tree: every row has a 3-dot button that opens `FileTreeItemMenu` (Rename, Delete, Move, New note, New folder, New diagram). On desktop the button is hover-only, on touch it is always visible. The existing right-click and HTML5 drag-and-drop remain for desktop.
+- Editor: `packages/editor/src/NoteEditor.tsx` sets `fontSize: 16px` (prevents iOS auto-zoom), disables `overflowAnchor` on the scroller (prevents scroll jumps when the keyboard opens), and sets `autocapitalize="sentences"`, `autocorrect="on"`, `spellcheck="true"`.
+- Out of scope: touch editing of drawio/bpmn diagrams, native shells, bottom-tab navigation.
