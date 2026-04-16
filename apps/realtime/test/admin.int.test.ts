@@ -62,9 +62,12 @@ describe("admin /internal/ydoc/apply", () => {
     await prisma.link.deleteMany({});
     await prisma.noteDoc.deleteMany({});
     await prisma.realtimeGrant.deleteMany({});
+    await prisma.noteShare.deleteMany({});
     await prisma.note.deleteMany({});
     await prisma.folder.deleteMany({});
     await prisma.vault.deleteMany({});
+    await prisma.membership.deleteMany({});
+    await prisma.workspace.deleteMany({});
     await prisma.user.deleteMany({});
     server = await startServer(PORT);
   });

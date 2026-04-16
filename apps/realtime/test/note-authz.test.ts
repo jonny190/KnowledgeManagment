@@ -68,4 +68,32 @@ describe("assertCanAccessNoteForRealtime", () => {
     });
     await expect(assertCanAccessNoteForRealtime(member.id, note.id, "EDIT")).rejects.toThrow();
   });
+
+  it("rejects a VIEW-only user asking for EDIT (realtime requirement)", async () => {
+    const owner = await prisma.user.create({ data: { email: "ro@t" } });
+    const viewer = await prisma.user.create({ data: { email: "rv@t" } });
+    const ws = await prisma.workspace.create({
+      data: { name: "w3", slug: "w3", ownerId: owner.id },
+    });
+    await prisma.membership.create({ data: { workspaceId: ws.id, userId: owner.id, role: "OWNER" } });
+    await prisma.membership.create({ data: { workspaceId: ws.id, userId: viewer.id, role: "MEMBER" } });
+    const vault = await prisma.vault.create({
+      data: { ownerType: "WORKSPACE", ownerId: ws.id, name: "w3" },
+    });
+    const note = await prisma.note.create({
+      data: {
+        vaultId: vault.id,
+        title: "ro",
+        slug: "ro",
+        content: "",
+        visibility: "PRIVATE",
+        createdById: owner.id,
+        updatedById: owner.id,
+      },
+    });
+    await prisma.noteShare.create({
+      data: { noteId: note.id, userId: viewer.id, role: "VIEW", createdBy: owner.id },
+    });
+    await expect(assertCanAccessNoteForRealtime(viewer.id, note.id, "EDIT")).rejects.toThrow();
+  });
 });
