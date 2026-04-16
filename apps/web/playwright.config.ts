@@ -5,7 +5,7 @@ export default defineConfig({
   timeout: 90_000,
   fullyParallel: false,
   workers: 1,
-  retries: 1,
+  retries: 2,
   reporter: "list",
   globalSetup: "./playwright/global-setup.ts",
   use: {

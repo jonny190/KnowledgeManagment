@@ -106,7 +106,7 @@ test("alice shares PRIVATE note with bob via API, carol is blocked, public link 
   const publicRes = await anonPage.request.get(`/api/public/n/${link.slug}`);
   expect(publicRes.status()).toBe(200);
   const publicBody = await publicRes.json();
-  expect(publicBody.title).toBe("Top Secret Note");
+  expect(publicBody.note.title).toBe("Top Secret Note");
 
   // Alice revokes the link
   const revokeRes = await page.request.delete(`/api/notes/${noteId}/links/${link.id}`);
