@@ -25,18 +25,18 @@ Out of scope:
 
 ```
 Browser
-  https://km.daveys.xyz                         wss://km-ws.daveys.xyz
+  https://km.coria.app                         wss://km-ws.coria.app
 Cloudflare Edge (TLS termination, WS enabled)
   CNAME
 <tunnel-id>.cfargotunnel.com
 cloudflared on Jonny's host
   ingress:
-    km.daveys.xyz    -> http://localhost:80
-    km-ws.daveys.xyz -> http://localhost:80
+    km.coria.app    -> http://localhost:80
+    km-ws.coria.app -> http://localhost:80
 Coolify proxy (Traefik default, port 80)
   Host-based routing:
-    km.daveys.xyz    -> km-web container    :3000
-    km-ws.daveys.xyz -> km-realtime container :3001
+    km.coria.app    -> km-web container    :3000
+    km-ws.coria.app -> km-realtime container :3001
 Internal container network:
   km-web, km-realtime, km-worker, km-postgres
 ```
@@ -46,8 +46,8 @@ Internal container network:
 | Service | Image | Public | Internal port | FQDN |
 |---|---|---|---|---|
 | km-postgres | `postgres:16-alpine` (Coolify managed DB) | No | 5432 | - |
-| km-web | `ghcr.io/jonny190/km-web:v0.2.3` | Yes | 3000 | km.daveys.xyz |
-| km-realtime | `ghcr.io/jonny190/km-realtime:v0.2.3` | Yes | 3001 | km-ws.daveys.xyz |
+| km-web | `ghcr.io/jonny190/km-web:v0.2.3` | Yes | 3000 | km.coria.app |
+| km-realtime | `ghcr.io/jonny190/km-realtime:v0.2.3` | Yes | 3001 | km-ws.coria.app |
 | km-worker | `ghcr.io/jonny190/km-worker:v0.2.3` | No | - | - |
 
 A named volume `km-data` mounts at `/data` in both `km-web` and `km-worker` for attachment + export storage.
@@ -62,11 +62,11 @@ Three 32-byte base64 values generated locally on the operator machine, saved to 
 
 ## Env vars (first deploy)
 
-**km-web:** `DATABASE_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL=https://km.daveys.xyz`, `REALTIME_JWT_SECRET`, `REALTIME_ADMIN_SECRET`, `REALTIME_INTERNAL_URL=http://km-realtime:3001`, `NEXT_PUBLIC_REALTIME_URL=wss://km-ws.daveys.xyz`, `AI_PROVIDER=stub`, `ANTHROPIC_API_KEY=stub`, `EMAIL_PROVIDER=console`, `APP_URL=https://km.daveys.xyz`, `DATA_DIR=/data`, `GOOGLE_CLIENT_ID=`, `GOOGLE_CLIENT_SECRET=`, `GITHUB_CLIENT_ID=`, `GITHUB_CLIENT_SECRET=`.
+**km-web:** `DATABASE_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL=https://km.coria.app`, `REALTIME_JWT_SECRET`, `REALTIME_ADMIN_SECRET`, `REALTIME_INTERNAL_URL=http://km-realtime:3001`, `NEXT_PUBLIC_REALTIME_URL=wss://km-ws.coria.app`, `AI_PROVIDER=stub`, `ANTHROPIC_API_KEY=stub`, `EMAIL_PROVIDER=console`, `APP_URL=https://km.coria.app`, `DATA_DIR=/data`, `GOOGLE_CLIENT_ID=`, `GOOGLE_CLIENT_SECRET=`, `GITHUB_CLIENT_ID=`, `GITHUB_CLIENT_SECRET=`.
 
 **km-realtime:** `DATABASE_URL`, `REALTIME_JWT_SECRET`, `REALTIME_ADMIN_SECRET`, `REALTIME_PORT=3001`.
 
-**km-worker:** `DATABASE_URL`, `EMAIL_PROVIDER=console`, `AI_PROVIDER=stub`, `DATA_DIR=/data`, `APP_URL=https://km.daveys.xyz`.
+**km-worker:** `DATABASE_URL`, `EMAIL_PROVIDER=console`, `AI_PROVIDER=stub`, `DATA_DIR=/data`, `APP_URL=https://km.coria.app`.
 
 ## Execution sequence
 
@@ -80,7 +80,7 @@ Three 32-byte base64 values generated locally on the operator machine, saved to 
    - Create three application services pointing at the GHCR images with the env vars above and the named volume mount where applicable.
 4. Run the Prisma migration against the new Postgres (via Coolify exec or via the public-mapped port, whichever is available).
 5. Start the services in order: Postgres, worker, realtime, web.
-6. Smoke test over `https://km.daveys.xyz`: signup, create workspace, create note, open it, confirm the realtime "Live" indicator.
+6. Smoke test over `https://km.coria.app`: signup, create workspace, create note, open it, confirm the realtime "Live" indicator.
 7. Append a record to `infra/coolify/deploy-log.md` noting the tag, date, and any drift between the plan and what actually happened.
 
 ## Rollback plan

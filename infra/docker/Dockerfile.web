@@ -38,9 +38,15 @@ COPY --from=build --chown=app:app /repo/apps/web/.next/standalone ./
 COPY --from=build --chown=app:app /repo/apps/web/.next/static ./apps/web/.next/static
 COPY --from=build --chown=app:app /repo/apps/web/public ./apps/web/public
 COPY --from=build --chown=app:app /repo/packages/db/prisma ./packages/db/prisma
+# Prisma CLI + schema needed for migrate deploy at startup. Standalone already
+# includes @prisma/client but not the CLI; install a minimal copy into /app.
+COPY --from=build --chown=app:app /repo/node_modules/.pnpm/prisma@5.20.0 /app/node_modules/.pnpm/prisma@5.20.0
+COPY --from=build --chown=app:app /repo/node_modules/prisma /app/node_modules/prisma
 
 USER app
 EXPOSE 3000
 VOLUME ["/data"]
 
-CMD ["node", "apps/web/server.js"]
+# Apply any pending Prisma migrations before starting the server. Safe to run
+# repeatedly; prisma migrate deploy is idempotent and no-ops when up to date.
+CMD ["sh", "-c", "node node_modules/prisma/build/index.js migrate deploy --schema=packages/db/prisma/schema.prisma && node apps/web/server.js"]
