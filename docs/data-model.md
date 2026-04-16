@@ -129,6 +129,42 @@ Stores hashed one-time tokens for the email verification and password reset flow
 
 `Invite.token` stores the sha256 hash of the raw invite token. The raw token is delivered in the invite email and is not stored. When a user opens the accept URL the hash is compared against the row and, on match, the membership record is created.
 
+## Note visibility and sharing
+
+### Note.visibility
+
+The `Note` table has a `visibility` column of type `NoteVisibility` enum. The two possible values are `WORKSPACE` (anyone in the vault's workspace can read and edit the note) and `PRIVATE` (only the note creator and users listed in `NoteShare` can access it). Notes in personal vaults are always stored as `PRIVATE` and cannot be flipped to `WORKSPACE`.
+
+### NoteShare
+
+One row per user who has been granted direct access to a note. Only notes with `visibility = PRIVATE` benefit from these rows in practice, but the table is checked on every access regardless of visibility.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| id | String (PK) | cuid |
+| noteId | String | FK to Note, cascade delete |
+| userId | String | FK to User, cascade delete |
+| role | NoteShareRole | VIEW or EDIT |
+| createdBy | String | userId of whoever granted access |
+| createdAt | DateTime | Auto |
+
+The `(noteId, userId)` pair is unique. PATCH on the row updates `role` in place rather than deleting and recreating.
+
+### NoteLink
+
+One row per public share link for a note. Multiple links per note are allowed but the UI currently surfaces only one at a time.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| id | String (PK) | cuid |
+| noteId | String | FK to Note, cascade delete |
+| slug | String | Opaque 21-character nanoid, globally unique |
+| expiresAt | DateTime? | Optional absolute expiry; null means no expiry |
+| createdBy | String | userId of creator |
+| createdAt | DateTime | Auto |
+
+The unauthenticated viewer at `/public/n/[slug]` calls `GET /api/public/n/[slug]`. The route returns 404 if the link does not exist or has been deleted and 410 if `expiresAt` is in the past. A successful response carries the rendered note HTML, sanitised with `rehype-sanitize`.
+
 ## AI integration tables
 
 - `AiConversation` - one per `(vaultId, noteId, userId)` pairing in v1. `noteId` is nullable for future vault-wide chats. Cascades from vault delete; nulls on note delete.

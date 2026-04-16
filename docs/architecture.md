@@ -28,6 +28,12 @@ Services and responsibilities:
 
 The web and worker deploy independently but are built from the same monorepo so they always share types and the Prisma client.
 
+## Note ACLs
+
+Note-scoped routes and the realtime auth hook call `assertCanAccessNote` in `apps/web/src/lib/note-authz.ts`. The helper returns the first matching grant: the note creator is OWNER, a personal vault owner is OWNER, an explicit `NoteShare` row grants VIEW or EDIT, and a workspace member with `Note.visibility = WORKSPACE` falls back to EDIT (or OWNER for workspace OWNER/ADMIN). Vault-scoped routes (tree, folders, diagrams, search) keep using `assertCanAccessVault`.
+
+Realtime `onAuthenticate` requires EDIT, so VIEW-only shares cannot open the editor. The note page shows VIEW-only users the static read-only render instead. Public links live in `NoteLink`, with an opaque 21-character nanoid slug and optional `expiresAt`. The unauthenticated viewer at `/public/n/[slug]` reads from `/api/public/n/[slug]` and never touches the CRDT pipeline.
+
 ## Realtime
 
 The `apps/realtime` service runs Hocuspocus on port 3001. When a user opens a note, the browser calls the `issueRealtimeToken` server action in `apps/web`, which verifies vault access and returns a short-lived HS256 JWT along with a matching `RealtimeGrant` row.
