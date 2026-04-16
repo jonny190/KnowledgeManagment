@@ -8,10 +8,12 @@ import {
   getProvider,
   recordUsage,
   runChat,
+  setRecomputeHook,
 } from "@km/ai";
 import { aiChatRequest, type AiSseEvent } from "@km/shared";
 import { requireUserId } from "@/lib/session";
 import { assertCanAccessVault } from "@/lib/authz";
+import { recomputeLinksAndTags } from "@/lib/links";
 import { createHash } from "node:crypto";
 
 export const runtime = "nodejs";
@@ -20,6 +22,20 @@ export const dynamic = "force-dynamic";
 const TOKEN_LIMIT = Number(process.env.AI_DAILY_TOKEN_LIMIT ?? 200000);
 const REQUEST_LIMIT = Number(process.env.AI_DAILY_REQUEST_LIMIT ?? 200);
 const MAX_TOOL_HOPS = Number(process.env.AI_MAX_TOOL_HOPS ?? 8);
+
+let hookInstalled = false;
+function ensureRecomputeHook() {
+  if (hookInstalled) return;
+  setRecomputeHook(async (tx, noteId, vaultId, markdown) => {
+    await recomputeLinksAndTags(
+      tx as Parameters<typeof recomputeLinksAndTags>[0],
+      noteId,
+      vaultId,
+      markdown,
+    );
+  });
+  hookInstalled = true;
+}
 
 function sseEncoder() {
   const encoder = new TextEncoder();
@@ -76,6 +92,7 @@ export async function POST(req: Request) {
     { role: "user", content: parsed.message },
   ];
 
+  ensureRecomputeHook();
   const provider = getProvider();
   const controller = new AbortController();
   const encode = sseEncoder();
@@ -93,7 +110,13 @@ export async function POST(req: Request) {
           systemPrompt: SYSTEM_PROMPT,
           cachedNoteContext,
           history,
-          ctx: { userId, vaultId: conversation.vaultId, prisma },
+          ctx: {
+            userId,
+            vaultId: conversation.vaultId,
+            prisma,
+            realtimeUrl: process.env.REALTIME_INTERNAL_URL ?? "http://localhost:3001",
+            adminSecret: process.env.REALTIME_ADMIN_SECRET ?? "",
+          },
           maxToolHops: MAX_TOOL_HOPS,
           signal: controller.signal,
           emit: (event) => {
