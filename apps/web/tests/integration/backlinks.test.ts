@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { resetDb, createUser } from "../helpers/db";
+import { resetDb, createUser, createWorkspaceFixture } from "../helpers/db";
 import { prisma } from "@km/db";
 
 vi.mock("../../src/lib/session", () => ({
@@ -46,5 +46,28 @@ describe("GET /api/notes/:id/backlinks", () => {
     const res = await getBacklinks(new Request(`http://t/api/notes/${n.id}/backlinks`), { params: { id: n.id } });
     const body = await res.json();
     expect(body.backlinks).toEqual([]);
+  });
+
+  it("403s on PRIVATE note for an unshared workspace member", async () => {
+    const { user: owner } = await createUser();
+    const { workspace, vault } = await createWorkspaceFixture(owner.id);
+    const { user: member } = await createUser();
+    await prisma.membership.create({
+      data: { workspaceId: workspace.id, userId: member.id, role: "MEMBER" },
+    });
+    const target = await prisma.note.create({
+      data: {
+        vaultId: vault.id,
+        title: "Target",
+        slug: "target",
+        content: "",
+        visibility: "PRIVATE",
+        createdById: owner.id,
+        updatedById: owner.id,
+      },
+    });
+    vi.mocked(requireUserId).mockResolvedValue(member.id);
+    const res = await getBacklinks(new Request("http://t"), { params: { id: target.id } });
+    expect(res.status).toBe(403);
   });
 });
