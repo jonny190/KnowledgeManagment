@@ -1,11 +1,18 @@
 import "./globals.css";
 import "@/styles/theme.css";
 import type { ReactNode } from "react";
+import type { Viewport } from "next";
 import { Providers } from "./providers";
 
 export const metadata = {
   title: "Knowledge Management",
   description: "Web-based knowledge management platform",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
