@@ -50,13 +50,15 @@ export default async function MembersPage({ params }: { params: { id: string } }
   return (
     <main className="p-6 space-y-6">
       <h1 className="text-2xl font-semibold">{workspace.name} members</h1>
-      <ul className="space-y-1">
-        {members.map((m) => (
-          <li key={m.id}>
-            {m.user.email} <span className="text-sm text-gray-500">({m.role})</span>
-          </li>
-        ))}
-      </ul>
+      <div className="w-full overflow-x-auto">
+        <ul className="space-y-1 min-w-0">
+          {members.map((m) => (
+            <li key={m.id}>
+              {m.user.email} <span className="text-sm text-gray-500">({m.role})</span>
+            </li>
+          ))}
+        </ul>
+      </div>
       {canInvite && (
         <form action={invite} className="space-y-2 max-w-md">
           <h2 className="text-lg font-semibold">Invite a member</h2>

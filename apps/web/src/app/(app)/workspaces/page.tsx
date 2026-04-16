@@ -21,16 +21,18 @@ export default async function WorkspacesPage() {
       {memberships.length === 0 ? (
         <p>You are not a member of any workspaces yet.</p>
       ) : (
-        <ul className="space-y-2">
-          {memberships.map((m) => (
-            <li key={m.id}>
-              <Link href={`/workspaces/${m.workspace.id}/members`} className="underline">
-                {m.workspace.name}
-              </Link>{" "}
-              <span className="text-sm text-gray-500">({m.role})</span>
-            </li>
-          ))}
-        </ul>
+        <div className="w-full overflow-x-auto">
+          <ul className="space-y-2 min-w-0">
+            {memberships.map((m) => (
+              <li key={m.id}>
+                <Link href={`/workspaces/${m.workspace.id}/members`} className="underline">
+                  {m.workspace.name}
+                </Link>{" "}
+                <span className="text-sm text-gray-500">({m.role})</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </main>
   );
