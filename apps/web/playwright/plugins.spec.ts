@@ -51,7 +51,7 @@ test("wordcount plugin updates status bar on save", async ({ page, baseURL }) =>
 
   // 6. Navigate to the note and type some content to trigger autosave
   await page.goto(`/vault/${vaultId}/note/${noteId}`);
-  await expect(page.locator("h1")).toHaveText("Plugin Test Note", { timeout: 10000 });
+  await expect(page.locator('header h1')).toHaveText("Plugin Test Note", { timeout: 10000 });
   const editorContent = page.locator(".cm-content");
   await editorContent.waitFor({ state: "visible", timeout: 10000 });
   await editorContent.click();

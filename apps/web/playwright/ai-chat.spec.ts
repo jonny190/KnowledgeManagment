@@ -32,7 +32,7 @@ test("AI chat panel streams a response and updates usage", async ({ page }) => {
   await page.goto(`/vault/${vaultId}/note/${note.id}`);
   await page.waitForSelector(".cm-content", { timeout: 15000 });
 
-  await page.getByRole("button", { name: /open ai chat/i }).click();
+  // The AI chat panel is permanently visible on desktop in the right aside.
   const panel = page.locator("aside").filter({ hasText: "AI chat" });
   await expect(panel).toBeVisible({ timeout: 5000 });
   await panel.locator("textarea").fill("What is in this note?");
@@ -68,10 +68,10 @@ test("AI chat createNote shows Undo strip and Undo removes the note", async ({ p
   await page.goto(`/vault/${vaultId}/note/${note.id}`);
   await page.waitForSelector(".cm-content", { timeout: 15000 });
 
+  // The AI chat panel is permanently visible on desktop in the right aside.
   // The CI test harness is expected to run with AI_PROVIDER=stub; we drive a
   // tool-call-producing message via the server test-hook header so the stub
   // provider scripts a createNote tool_use.
-  await page.getByRole("button", { name: /open ai chat/i }).click();
   const panel = page.locator("aside").filter({ hasText: "AI chat" });
   await expect(panel).toBeVisible({ timeout: 5000 });
   await panel.locator("textarea").fill(

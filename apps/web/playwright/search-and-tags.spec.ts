@@ -50,7 +50,7 @@ test("search palette finds a note, tag sidebar filters correctly", async ({ page
 
   // 6. Write content into AlphaUnique containing #draft
   await page.goto(`/vault/${vaultId}/note/${alphaId}`);
-  await expect(page.locator("h1")).toHaveText("AlphaUnique", { timeout: 10000 });
+  await expect(page.locator('header h1')).toHaveText("AlphaUnique", { timeout: 10000 });
   const editorAlpha = page.locator(".cm-content");
   await editorAlpha.waitFor({ state: "visible", timeout: 10000 });
   await editorAlpha.click();
@@ -60,7 +60,7 @@ test("search palette finds a note, tag sidebar filters correctly", async ({ page
 
   // 7. Write content into BravoDistinctive containing #draft
   await page.goto(`/vault/${vaultId}/note/${bravoId}`);
-  await expect(page.locator("h1")).toHaveText("BravoDistinctive", { timeout: 10000 });
+  await expect(page.locator('header h1')).toHaveText("BravoDistinctive", { timeout: 10000 });
   const editorBravo = page.locator(".cm-content");
   await editorBravo.waitFor({ state: "visible", timeout: 10000 });
   await editorBravo.click();

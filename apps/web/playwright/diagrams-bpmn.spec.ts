@@ -33,7 +33,7 @@ test('create, edit, and persist a bpmn diagram', async ({ page }) => {
   const diagram = await diagramResp.json();
 
   await page.goto(`/vault/${vaultId}/diagram/${diagram.id}`);
-  await expect(page.locator('h1')).toContainText('E2E Process', { timeout: 10000 });
+  await expect(page.locator('header h1')).toContainText('E2E Process', { timeout: 10000 });
   await expect(page.getByTestId('bpmn-canvas')).toBeVisible({ timeout: 15000 });
 
   await page.getByRole('button', { name: 'Save' }).click();

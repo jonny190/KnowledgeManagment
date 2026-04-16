@@ -36,7 +36,7 @@ test('create, edit, and persist a drawio diagram', async ({ page }) => {
   const diagram = await diagramResp.json();
 
   await page.goto(`/vault/${vaultId}/diagram/${diagram.id}`);
-  await expect(page.locator('h1')).toContainText('E2E Flow', { timeout: 10000 });
+  await expect(page.locator('header h1')).toContainText('E2E Flow', { timeout: 10000 });
 
   const frameLocator = page.frameLocator('iframe[title="drawio editor"]');
   await expect(frameLocator.locator('body')).toBeVisible({ timeout: 20000 });
@@ -70,6 +70,6 @@ test('create, edit, and persist a drawio diagram', async ({ page }) => {
   );
 
   await page.reload();
-  await expect(page.locator('h1')).toContainText('E2E Flow', { timeout: 10000 });
+  await expect(page.locator('header h1')).toContainText('E2E Flow', { timeout: 10000 });
   await expect(frameLocator.locator('body')).toBeVisible({ timeout: 20000 });
 });

@@ -40,7 +40,7 @@ test('wiki-link from a note navigates to a diagram', async ({ page }) => {
   const noteId: string = noteBody.note.id;
 
   await page.goto(`/vault/${vaultId}/note/${noteId}`);
-  await expect(page.locator('h1')).toHaveText('Index', { timeout: 10000 });
+  await expect(page.locator('header h1')).toHaveText('Index', { timeout: 10000 });
 
   const editorContent = page.locator('.cm-content');
   await editorContent.waitFor({ state: 'visible', timeout: 10000 });
