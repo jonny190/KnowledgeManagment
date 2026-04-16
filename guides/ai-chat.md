@@ -9,3 +9,11 @@ Ask anything in plain English. Press Send to deliver the message and watch the r
 Each tool call the assistant makes appears as a small expandable card so you can see what it looked at.
 
 There is a daily limit on how many tokens and requests each user can spend. The current usage shows in the panel header. If you hit the limit, the assistant will pause until the next day in UTC.
+
+## Creating notes and folders from chat
+
+The AI can now create notes and folders for you. Ask it to "make a note called Meeting notes" or "create a folder called Projects" and it will do so directly. Each new note or folder shows an Undo link in the chat for 10 seconds; click it to roll back.
+
+When the AI edits an existing note, the change appears in your editor immediately. Use Ctrl-Z (or Cmd-Z on macOS) to undo an AI edit just like any other edit.
+
+Wiki links the AI produces, such as [[Meeting notes]], resolve automatically as soon as the referenced note exists.
