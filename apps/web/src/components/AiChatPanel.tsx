@@ -81,6 +81,14 @@ export function AiChatPanel(props: AiChatPanelProps) {
         error: data.error,
       });
       setMessages((prev) => [...prev]);
+    } else if (data.type === "tool_result_undoable") {
+      streamingBlocksRef.current.push({
+        type: "undoable",
+        callId: data.callId,
+        summary: data.summary,
+        undo: data.undo,
+      });
+      setMessages((prev) => [...prev]);
     } else if (data.type === "usage") {
       setUsage((u) => ({ used: u.used + data.inputTokens + data.outputTokens, limit: u.limit }));
     } else if (data.type === "error") {

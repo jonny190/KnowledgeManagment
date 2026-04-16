@@ -61,6 +61,19 @@ export async function runChat(opts: RunChatOptions): Promise<AiUsageRecord> {
         const parsed = tool.parse(call.args);
         const result = await tool.execute(parsed, opts.ctx);
         opts.emit({ type: "tool_result", id: call.id, ok: true, result });
+        const maybeUndo = (result as { undo?: unknown } | null | undefined)?.undo;
+        if (maybeUndo !== undefined) {
+          const undoTyped = maybeUndo as
+            | { kind: "create_note" | "create_folder"; id: string }
+            | null;
+          const summary = buildUndoSummary(call.name, result, undoTyped);
+          opts.emit({
+            type: "tool_result_undoable",
+            callId: call.id,
+            undo: undoTyped,
+            summary,
+          });
+        }
         toolResults.push({ id: call.id, ok: true, result });
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
@@ -92,4 +105,20 @@ export async function runChat(opts: RunChatOptions): Promise<AiUsageRecord> {
   }
 
   return totals;
+}
+
+function buildUndoSummary(
+  toolName: string,
+  result: unknown,
+  undo: { kind: "create_note" | "create_folder"; id: string } | null,
+): string {
+  const r = (result ?? {}) as { title?: string; path?: string };
+  if (undo === null) {
+    const title = r.title ?? "note";
+    return `Updated '${title}'. Use Ctrl-Z in the editor to revert.`;
+  }
+  if (undo.kind === "create_note") {
+    return `Created note '${r.title ?? toolName}'`;
+  }
+  return `Created folder '${r.path ?? toolName}'`;
 }

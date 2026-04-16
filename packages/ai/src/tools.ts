@@ -91,4 +91,19 @@ export const listBacklinks: AiTool<z.infer<typeof listBacklinksArgs>, unknown[]>
   },
 };
 
-export const ALL_TOOLS = [readNote, searchNotes, listBacklinks];
+export { createNote, setRecomputeHook, __resetRecomputeHookForTests } from "./tools/createNote";
+export { createFolder } from "./tools/createFolder";
+export { updateNote } from "./tools/updateNote";
+
+import { createNote as _createNote } from "./tools/createNote";
+import { createFolder as _createFolder } from "./tools/createFolder";
+import { updateNote as _updateNote } from "./tools/updateNote";
+
+export const ALL_TOOLS = [
+  readNote,
+  searchNotes,
+  listBacklinks,
+  _createNote,
+  _updateNote,
+  _createFolder,
+];

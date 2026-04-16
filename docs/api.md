@@ -165,3 +165,31 @@ Body: `{ conversationId, message }`. Server-Sent Events response. Event types: `
 ### POST /api/ai/command
 
 Body: `{ conversationId, command, selection, language? }`. Same SSE event grammar as `/api/ai/chat`. The `command` is one of `summarize`, `expand`, `rewrite`, `translate`. `language` is required for `translate`.
+
+## Internal endpoints
+
+### POST /internal/ydoc/apply (apps/realtime)
+
+This endpoint is internal and is never routed publicly. Cloudflare must only
+forward `/yjs` to the realtime container.
+
+Headers:
+
+- `Content-Type: application/json`
+- `X-KM-Admin-Signature: HMAC-SHA256(REALTIME_ADMIN_SECRET, rawBody)` as hex.
+
+Body:
+
+```json
+{ "noteId": "...", "op": "append" | "replace", "text": "...", "origin": "ai" }
+```
+
+Responses:
+
+- 200 `{ "applied": true, "revision": <int> }`
+- 400 bad body
+- 401 signature missing or mismatch
+- 405 method not POST
+
+The mutation runs under the per-note mutex that also guards snapshots, so
+concurrent admin POSTs for the same note serialise deterministically.

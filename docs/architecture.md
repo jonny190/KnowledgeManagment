@@ -46,6 +46,12 @@ The provider is wrapped behind an `AiProvider` interface in `packages/ai`. The A
 
 The tool runner in `packages/ai/src/runner.ts` drives a bounded loop of provider stream calls and tool executions. v1 tools are read-only and vault-scoped: `readNote`, `searchNotes`, `listBacklinks`. Each tool re-checks vault membership defensively before reading data.
 
+### AI write tools
+
+The AI runner exposes three write tools in addition to the read-only set. `createNote` and `createFolder` commit directly through Prisma from inside the `/api/ai/chat` SSE route using the same `assertCanAccessVault` path as human actions. `updateNote` does not touch Prisma directly; instead it POSTs a signed payload to `POST /internal/ydoc/apply` on `apps/realtime`, which mutates the live Y.Doc under the per-note mutex and enqueues a snapshot. The HMAC is keyed by `REALTIME_ADMIN_SECRET`, which is distinct from the JWT secret used for client WS auth.
+
+After any write tool returns, the runner emits a `tool_result_undoable` SSE event carrying a summary and an undo token. The chat panel renders a 10-second Undo strip. Click calls `DELETE /api/notes/:id` or `DELETE /api/folders/:id`. For `updateNote`, the undo token is null and the user is pointed at the editor's Y.UndoManager (Ctrl-Z).
+
 ## Diagrams
 
 Phase 4 added two kinds of diagram to each vault: drawio flow diagrams and BPMN process diagrams.

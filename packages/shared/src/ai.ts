@@ -29,6 +29,17 @@ export const aiSseEvent = z.discriminatedUnion("type", [
     error: z.string().optional(),
   }),
   z.object({
+    type: z.literal("tool_result_undoable"),
+    callId: z.string(),
+    summary: z.string(),
+    undo: z
+      .object({
+        kind: z.enum(["create_note", "create_folder"]),
+        id: z.string(),
+      })
+      .nullable(),
+  }),
+  z.object({
     type: z.literal("usage"),
     inputTokens: z.number().int().nonnegative(),
     outputTokens: z.number().int().nonnegative(),

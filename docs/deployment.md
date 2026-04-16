@@ -60,3 +60,10 @@ Required on the web service:
 - `AI_DAILY_REQUEST_LIMIT` - default `200`.
 - `AI_MAX_TOOL_HOPS` - default `8`.
 - `AI_PROVIDER` - leave unset in production. Set to `stub` in CI.
+
+The write-tool feature adds two more variables:
+
+| Var | Where | Purpose |
+| --- | --- | --- |
+| `REALTIME_ADMIN_SECRET` | web + realtime | HMAC secret for internal Y.Doc admin writes. Must differ from `REALTIME_JWT_SECRET`. |
+| `REALTIME_INTERNAL_URL` | web | Base URL for the realtime container reachable server-side, e.g. `http://realtime:3001`. |

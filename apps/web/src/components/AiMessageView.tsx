@@ -3,9 +3,10 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import { AiToolCallCard } from "./AiToolCallCard";
+import { ChatUndoStrip } from "./ai/ChatUndoStrip";
 
 export interface AiMessageBlock {
-  type: "text" | "tool_use" | "tool_result";
+  type: "text" | "tool_use" | "tool_result" | "undoable";
   text?: string;
   id?: string;
   name?: string;
@@ -13,6 +14,9 @@ export interface AiMessageBlock {
   result?: unknown;
   ok?: boolean;
   error?: string;
+  callId?: string;
+  summary?: string;
+  undo?: { kind: "create_note" | "create_folder"; id: string } | null;
 }
 
 export interface AiMessageViewProps {
@@ -56,6 +60,15 @@ export function AiMessageView(props: AiMessageViewProps) {
               result={b.result}
               ok={b.ok}
               error={b.error}
+            />
+          );
+        }
+        if (b.type === "undoable" && b.summary !== undefined) {
+          return (
+            <ChatUndoStrip
+              key={i}
+              summary={b.summary}
+              undo={b.undo ?? null}
             />
           );
         }

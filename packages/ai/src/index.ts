@@ -5,6 +5,17 @@ export { getProvider } from "./providers/index";
 export { runChat } from "./runner";
 export type { RunChatOptions } from "./runner";
 export { readNote, searchNotes, listBacklinks, ALL_TOOLS } from "./tools";
+export {
+  createNote,
+  updateNote,
+  createFolder,
+  setRecomputeHook,
+} from "./tools";
+export {
+  applyAdminUpdate,
+  computeAdminSignature,
+  verifyAdminSignature,
+} from "./admin-client";
 export { SYSTEM_PROMPT } from "./prompts";
 export { buildCommandUserMessage } from "./commands";
 export {

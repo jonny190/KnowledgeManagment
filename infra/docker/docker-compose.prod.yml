@@ -42,6 +42,8 @@ services:
       EMAIL_FROM_MAILBOX: ${EMAIL_FROM_MAILBOX:-}
       EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-}
       APP_URL: ${APP_URL:-}
+      REALTIME_ADMIN_SECRET: ${REALTIME_ADMIN_SECRET}
+      REALTIME_INTERNAL_URL: ${REALTIME_INTERNAL_URL}
     volumes:
       - appdata:/data
     ports:
@@ -83,6 +85,7 @@ services:
       NODE_ENV: production
       DATABASE_URL: postgres://kmgmt:${POSTGRES_PASSWORD}@postgres:5432/kmgmt
       REALTIME_JWT_SECRET: ${REALTIME_JWT_SECRET}
+      REALTIME_ADMIN_SECRET: ${REALTIME_ADMIN_SECRET}
       REALTIME_PORT: 3001
     ports:
       - "3001:3001"
