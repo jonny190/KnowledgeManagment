@@ -4,7 +4,7 @@ import { Drawer } from "./Drawer";
 import { MobileTopBar } from "./MobileTopBar";
 
 export function VaultHomeShell({
-  vaultId,
+  vaultId: _vaultId,
   children,
 }: {
   vaultId: string;
