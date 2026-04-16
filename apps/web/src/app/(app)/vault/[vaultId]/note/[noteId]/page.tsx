@@ -11,6 +11,9 @@ import { ActiveUsers } from '@/components/ActiveUsers';
 import { AiChatPanel } from '@/components/AiChatPanel';
 import { NoteShareHeader } from '@/components/NoteShareHeader';
 import { pluginRegistry } from '@/lib/plugins/registry';
+import { Drawer } from '@/components/Drawer';
+import { MobileTopBar } from '@/components/MobileTopBar';
+import { FileTree } from '@/components/FileTree';
 
 interface NotePageProps {
   params: { vaultId: string; noteId: string };
@@ -36,6 +39,7 @@ export default function NotePage({ params }: NotePageProps) {
   const [titleMap, setTitleMap] = useState<Map<string, string>>(new Map());
   const [dialogTitle, setDialogTitle] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [mobileDrawer, setMobileDrawer] = useState<null | "files" | "backlinks" | "chat">(null);
 
   const commandRunnerRef = useRef<((cmd: { command: string; selection: string; language?: string }) => void) | null>(null);
 
@@ -194,21 +198,22 @@ export default function NotePage({ params }: NotePageProps) {
   if (!note) return <div>Loading...</div>;
 
   return (
-    <div style={{ display: 'flex', height: '100vh' }}>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <header
-          style={{
-            padding: '12px',
-            borderBottom: '1px solid #d0d7de',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <h1 style={{ fontSize: '18px', margin: 0 }}>{note.title}</h1>
-          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+    <div className="flex h-screen flex-col md:flex-row">
+      <MobileTopBar
+        title={note.title}
+        buttons={[
+          { key: "files", label: "Files", onClick: () => setMobileDrawer("files") },
+          { key: "backlinks", label: "Backlinks", onClick: () => setMobileDrawer("backlinks") },
+          { key: "chat", label: "AI", onClick: () => setMobileDrawer("chat") },
+        ]}
+      />
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="flex flex-wrap items-center justify-between gap-2 border-b p-3">
+          <h1 className="min-w-0 flex-1 truncate text-base md:text-lg">{note.title}</h1>
+          <div className="flex flex-wrap items-center gap-2 md:gap-3">
             <ActiveUsers awareness={session?.awareness ?? null} />
-            <span style={{ color: '#57606a', fontSize: '12px' }}>
+            <span className="text-xs text-slate-500">
               {session?.status === 'connected' ? 'Live' : session?.status ?? 'Connecting'}
             </span>
             <NoteShareHeader
@@ -218,9 +223,48 @@ export default function NotePage({ params }: NotePageProps) {
             />
           </div>
         </header>
-        <div style={{ flex: 1, minHeight: 0 }}>{editor}</div>
+        <div className="min-h-0 flex-1">{editor}</div>
       </div>
-      <BacklinksPanel noteId={note.id} vaultId={params.vaultId} reloadKey={reloadKey} />
+
+      <aside className="hidden md:block md:w-72 md:shrink-0 md:border-l">
+        <BacklinksPanel noteId={note.id} vaultId={params.vaultId} reloadKey={reloadKey} />
+      </aside>
+      <aside className="hidden md:block md:w-80 md:shrink-0 md:border-l">
+        <AiChatPanel
+          vaultId={params.vaultId}
+          noteId={params.noteId}
+          active
+          onApplyAtCursor={onApplyAtCursor}
+          registerCommandRunner={(fn) => { commandRunnerRef.current = fn; }}
+        />
+      </aside>
+
+      <Drawer open={mobileDrawer === "files"} onClose={() => setMobileDrawer(null)} side="left" title="Files">
+        <FileTree vaultId={params.vaultId} />
+      </Drawer>
+      <Drawer
+        open={mobileDrawer === "backlinks"}
+        onClose={() => setMobileDrawer(null)}
+        side="right"
+        title="Backlinks"
+      >
+        <BacklinksPanel noteId={note.id} vaultId={params.vaultId} reloadKey={reloadKey} />
+      </Drawer>
+      <Drawer
+        open={mobileDrawer === "chat"}
+        onClose={() => setMobileDrawer(null)}
+        side="right"
+        title="AI chat"
+      >
+        <AiChatPanel
+          vaultId={params.vaultId}
+          noteId={params.noteId}
+          active={mobileDrawer === "chat"}
+          onApplyAtCursor={onApplyAtCursor}
+          registerCommandRunner={(fn) => { commandRunnerRef.current = fn; }}
+        />
+      </Drawer>
+
       <CreateNoteDialog
         open={dialogTitle !== null}
         title={dialogTitle ?? ''}
@@ -229,14 +273,6 @@ export default function NotePage({ params }: NotePageProps) {
         onCreated={(id) => {
           setDialogTitle(null);
           router.push(`/vault/${params.vaultId}/note/${id}`);
-        }}
-      />
-      <AiChatPanel
-        vaultId={params.vaultId}
-        noteId={params.noteId}
-        onApplyAtCursor={onApplyAtCursor}
-        registerCommandRunner={(fn) => {
-          commandRunnerRef.current = fn;
         }}
       />
     </div>
