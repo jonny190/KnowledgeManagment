@@ -9,6 +9,7 @@ import { CreateNoteDialog } from '@/components/CreateNoteDialog';
 import { useCollabSession } from '@/components/CollabSession';
 import { ActiveUsers } from '@/components/ActiveUsers';
 import { AiChatPanel } from '@/components/AiChatPanel';
+import { NoteShareHeader } from '@/components/NoteShareHeader';
 import { pluginRegistry } from '@/lib/plugins/registry';
 
 interface NotePageProps {
@@ -20,12 +21,18 @@ interface NoteDto {
   vaultId: string;
   title: string;
   content: string;
+  visibility: "WORKSPACE" | "PRIVATE";
+}
+
+interface VaultDto {
+  ownerType: "USER" | "WORKSPACE";
 }
 
 export default function NotePage({ params }: NotePageProps) {
   const router = useRouter();
   const { data: sessionData } = useSession();
   const [note, setNote] = useState<NoteDto | null>(null);
+  const [vault, setVault] = useState<VaultDto | null>(null);
   const [titleMap, setTitleMap] = useState<Map<string, string>>(new Map());
   const [dialogTitle, setDialogTitle] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -45,7 +52,19 @@ export default function NotePage({ params }: NotePageProps) {
   useEffect(() => {
     fetch(`/api/notes/${params.noteId}`)
       .then((r) => r.json())
-      .then((body) => setNote(body.note));
+      .then((body) => {
+        setNote(body.note);
+        // Fetch vault ownerType for share dialog
+        if (body.note?.vaultId) {
+          fetch(`/api/vaults`)
+            .then((r) => r.json())
+            .then((vaults: { vaults: Array<{ id: string; ownerType: "USER" | "WORKSPACE" }> }) => {
+              const v = vaults.vaults.find((x) => x.id === body.note.vaultId);
+              if (v) setVault({ ownerType: v.ownerType });
+            })
+            .catch(() => undefined);
+        }
+      });
   }, [params.noteId]);
 
   useEffect(() => {
@@ -192,6 +211,11 @@ export default function NotePage({ params }: NotePageProps) {
             <span style={{ color: '#57606a', fontSize: '12px' }}>
               {session?.status === 'connected' ? 'Live' : session?.status ?? 'Connecting'}
             </span>
+            <NoteShareHeader
+              noteId={note.id}
+              visibility={note.visibility ?? "WORKSPACE"}
+              vaultOwnerType={vault?.ownerType ?? "WORKSPACE"}
+            />
           </div>
         </header>
         <div style={{ flex: 1, minHeight: 0 }}>{editor}</div>

@@ -166,6 +166,82 @@ Body: `{ conversationId, message }`. Server-Sent Events response. Event types: `
 
 Body: `{ conversationId, command, selection, language? }`. Same SSE event grammar as `/api/ai/chat`. The `command` is one of `summarize`, `expand`, `rewrite`, `translate`. `language` is required for `translate`.
 
+## Note sharing
+
+### GET /api/notes/:id/shares
+
+Returns the list of per-user shares and active public links for a note. The caller must have at least VIEW access to the note.
+
+Response:
+
+```json
+{
+  "shares": [
+    {
+      "id": "...",
+      "userId": "...",
+      "role": "VIEW" | "EDIT",
+      "user": { "email": "...", "name": "..." }
+    }
+  ],
+  "links": [
+    {
+      "id": "...",
+      "slug": "...",
+      "expiresAt": null,
+      "createdAt": "..."
+    }
+  ]
+}
+```
+
+### POST /api/notes/:id/shares
+
+Body: `{ "email": "...", "role": "VIEW" | "EDIT" }`. Grants access to the user with the given email address. Returns 201 with the created share row. Returns 404 with `{ "reason": "user_not_found" }` if no account exists for that email. Returns 404 with `{ "reason": "note_not_found" }` if the caller cannot see the note. The caller must have OWNER or EDIT access to the note.
+
+### PATCH /api/notes/:id/shares/:userId
+
+Body: `{ "role": "VIEW" | "EDIT" }`. Updates the role of an existing share. Returns 200 with the updated share row. Returns 404 if the share does not exist. The caller must have OWNER access.
+
+### DELETE /api/notes/:id/shares/:userId
+
+Removes the share. Returns 204. The caller must have OWNER access.
+
+### POST /api/notes/:id/visibility
+
+Body: `{ "visibility": "WORKSPACE" | "PRIVATE" }`. Flips the note visibility. Returns 200 with the updated note. Returns 400 if the note is in a personal vault (personal vault notes are always PRIVATE). The caller must have OWNER access.
+
+### POST /api/notes/:id/links
+
+Body: `{}`. Creates a new public share link. Returns 201 with `{ "link": { "id": "...", "slug": "...", "expiresAt": null, "createdAt": "..." } }`. The caller must have OWNER access.
+
+### DELETE /api/notes/:id/links/:linkId
+
+Deletes the public link. Returns 204. The caller must have OWNER access.
+
+## Public viewer
+
+### GET /api/public/n/:slug
+
+Unauthenticated endpoint. Returns the rendered note content for the given public link slug.
+
+Response on success:
+
+```json
+{
+  "title": "My note",
+  "html": "<p>Sanitised note HTML</p>",
+  "createdAt": "...",
+  "updatedAt": "..."
+}
+```
+
+Status codes:
+
+- 200: link is valid and note is readable.
+- 404: link does not exist or has been deleted.
+- 410: link exists but `expiresAt` is in the past.
+
 ## Internal endpoints
 
 ### POST /internal/ydoc/apply (apps/realtime)

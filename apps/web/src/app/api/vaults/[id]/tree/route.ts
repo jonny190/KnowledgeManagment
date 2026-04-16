@@ -24,8 +24,15 @@ export async function GET(_req: Request, ctx: { params: { id: string } }) {
   const [folders, notes, diagrams] = await Promise.all([
     prisma.folder.findMany({ where: { vaultId }, orderBy: { name: "asc" } }),
     prisma.note.findMany({
-      where: { vaultId },
-      select: { id: true, title: true, slug: true, folderId: true, updatedAt: true },
+      where: {
+        vaultId,
+        OR: [
+          { visibility: "WORKSPACE" },
+          { createdById: userId },
+          { shares: { some: { userId } } },
+        ],
+      },
+      select: { id: true, title: true, slug: true, folderId: true, updatedAt: true, visibility: true },
       orderBy: { title: "asc" },
     }),
     prisma.diagram.findMany({

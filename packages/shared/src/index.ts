@@ -55,3 +55,19 @@ export type {
   PluginContext,
   PluginDefinition,
 } from "./plugins";
+export {
+  noteVisibility,
+  noteShareRole,
+  noteShareCreateInput,
+  noteSharePatchInput,
+  noteVisibilityInput,
+  noteLinkCreateInput,
+} from "./schemas/note-acls";
+export type {
+  NoteVisibilityValue,
+  NoteShareRoleValue,
+  NoteShareCreateInput,
+  NoteSharePatchInput,
+  NoteVisibilityInput,
+  NoteLinkCreateInput,
+} from "./schemas/note-acls";

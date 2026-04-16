@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import { realtimeJwtPayload, type RealtimeJwtPayload } from "@km/shared";
 import { prisma } from "./prisma.js";
+import { assertCanAccessNoteForRealtime } from "./note-authz.js";
 
 export interface RealtimeContext {
   userId: string;
@@ -35,21 +36,9 @@ export async function verifyRealtimeToken(
   if (grant.revokedAt) throw new Error(`grant revoked for jti=${payload.jti}`);
   if (grant.expiresAt.getTime() <= Date.now()) throw new Error("grant expired");
 
-  // Re-check vault access against live Postgres state.
-  const vault = await prisma.vault.findUnique({
-    where: { id: payload.vid },
-    select: { id: true, ownerType: true, ownerId: true },
-  });
-  if (!vault) throw new Error("vault missing");
-  if (vault.ownerType === "USER") {
-    if (vault.ownerId !== payload.sub) throw new Error("not the owner");
-  } else {
-    const m = await prisma.membership.findFirst({
-      where: { workspaceId: vault.ownerId, userId: payload.sub },
-      select: { role: true },
-    });
-    if (!m) throw new Error("no membership");
-  }
+  // Re-check note access against live Postgres state.
+  const access = await assertCanAccessNoteForRealtime(payload.sub, payload.nid, "EDIT");
+  if (access.vaultId !== payload.vid) throw new Error("vault mismatch");
 
   return {
     userId: payload.sub,

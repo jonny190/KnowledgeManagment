@@ -9,12 +9,19 @@ import {
   recordUsage,
   runChat,
   setRecomputeHook,
+  setNoteAuthzHook,
 } from "@km/ai";
 import { aiChatRequest, type AiSseEvent } from "@km/shared";
 import { requireUserId } from "@/lib/session";
 import { assertCanAccessVault } from "@/lib/authz";
+import { assertCanAccessNote } from "@/lib/note-authz";
 import { recomputeLinksAndTags } from "@/lib/links";
 import { createHash } from "node:crypto";
+
+setNoteAuthzHook(async (userId, noteId, required) => {
+  const access = await assertCanAccessNote(userId, noteId, required);
+  return { effectiveRole: access.effectiveRole };
+});
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
