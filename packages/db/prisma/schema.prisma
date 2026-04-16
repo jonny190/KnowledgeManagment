@@ -26,6 +26,7 @@ model User {
   aiUsage         AiUsage[]
   plugins     UserPlugin[]
   emailTokens EmailToken[]
+  noteShares  NoteShare[]
 }
 
 model Account {
@@ -65,6 +66,16 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+enum NoteVisibility {
+  WORKSPACE
+  PRIVATE
+}
+
+enum NoteShareRole {
+  VIEW
+  EDIT
 }
 
 enum VaultOwnerType {
@@ -176,6 +187,7 @@ model Note {
   updatedAt        DateTime @updatedAt
   createdById      String
   updatedById      String
+  visibility     NoteVisibility @default(WORKSPACE)
 
   vault  Vault   @relation(fields: [vaultId], references: [id], onDelete: Cascade)
   folder Folder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
@@ -185,6 +197,8 @@ model Note {
   doc           NoteDoc?
   aiConversations AiConversation[]
   tags          NoteTag[]
+  shares        NoteShare[]
+  publicLinks   NoteLink[]
 
   searchVector Unsupported("tsvector")?
 
@@ -424,4 +438,33 @@ model EmailToken {
 
   @@index([email, kind])
   @@index([expiresAt])
+}
+
+model NoteShare {
+  id        String        @id @default(cuid())
+  noteId    String
+  userId    String
+  role      NoteShareRole
+  createdAt DateTime      @default(now())
+  createdBy String
+
+  note Note @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([noteId, userId])
+  @@index([userId])
+}
+
+model NoteLink {
+  id        String    @id @default(cuid())
+  noteId    String
+  slug      String    @unique
+  expiresAt DateTime?
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  createdBy String
+
+  note Note @relation(fields: [noteId], references: [id], onDelete: Cascade)
+
+  @@index([noteId])
 }
