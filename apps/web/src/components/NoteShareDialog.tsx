@@ -39,8 +39,7 @@ export function NoteShareDialog({ noteId, canToggleVisibility, initialVisibility
   }
   useEffect(() => {
     refresh();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [noteId]);
+  }, [noteId]); // refresh is defined in the component body and only reads noteId
 
   async function addShare() {
     setStatus(null);

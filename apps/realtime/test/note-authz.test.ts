@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, afterAll, beforeEach } from "vitest";
 import { prisma } from "../src/prisma.js";
 import { assertCanAccessNoteForRealtime } from "../src/note-authz.js";
 
@@ -14,6 +14,7 @@ async function cleanDb() {
 
 describe("assertCanAccessNoteForRealtime", () => {
   beforeEach(cleanDb);
+  afterAll(cleanDb);
 
   it("grants EDIT to a workspace MEMBER on a WORKSPACE note", async () => {
     const owner = await prisma.user.create({ data: { email: "o@t" } });
