@@ -3,30 +3,31 @@ import { ZodError } from "zod";
 import { prisma } from "@km/db";
 import { updateNoteInput } from "@km/shared";
 import { requireUserId } from "@/lib/session";
-import { assertCanAccessVault, AuthzError } from "@/lib/authz";
+import { AuthzError } from "@/lib/authz";
+import { assertCanAccessNote, type RequiredNoteRole } from "@/lib/note-authz";
 
-async function loadNoteAndAuthz(userId: string, noteId: string) {
-  const note = await prisma.note.findUnique({ where: { id: noteId } });
-  if (!note) return { error: NextResponse.json({ error: "Not found" }, { status: 404 }) };
+async function gate(userId: string, noteId: string, required: RequiredNoteRole) {
   try {
-    await assertCanAccessVault(userId, note.vaultId, "MEMBER");
+    return { access: await assertCanAccessNote(userId, noteId, required) };
   } catch (e) {
-    if (e instanceof AuthzError) return { error: NextResponse.json({ error: e.message }, { status: e.status }) };
+    if (e instanceof AuthzError) {
+      return { error: NextResponse.json({ error: e.message }, { status: e.status }) };
+    }
     throw e;
   }
-  return { note };
 }
 
 export async function GET(_req: Request, ctx: { params: { id: string } }) {
   const userId = await requireUserId();
-  const { error, note } = await loadNoteAndAuthz(userId, ctx.params.id);
+  const { error, access } = await gate(userId, ctx.params.id, "VIEW");
   if (error) return error;
+  const note = await prisma.note.findUnique({ where: { id: access!.note.id } });
   return NextResponse.json({ note }, { status: 200 });
 }
 
 export async function PATCH(req: Request, ctx: { params: { id: string } }) {
   const userId = await requireUserId();
-  const { error, note } = await loadNoteAndAuthz(userId, ctx.params.id);
+  const { error, access } = await gate(userId, ctx.params.id, "EDIT");
   if (error) return error;
 
   let input;
@@ -37,23 +38,25 @@ export async function PATCH(req: Request, ctx: { params: { id: string } }) {
     throw e;
   }
 
+  const note = await prisma.note.findUnique({ where: { id: access!.note.id } });
+  if (!note) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
   if (input.folderId !== undefined && input.folderId !== null) {
     const folder = await prisma.folder.findUnique({
       where: { id: input.folderId },
       select: { vaultId: true },
     });
-    if (!folder || folder.vaultId !== note!.vaultId) {
+    if (!folder || folder.vaultId !== note.vaultId) {
       return NextResponse.json({ error: "Bad folder" }, { status: 400 });
     }
   }
 
   // Phase 2: `content` is owned by the realtime snapshot pipeline.
-  // PATCH ignores `content` even if sent for backwards compatibility.
   const updated = await prisma.note.update({
-    where: { id: note!.id },
+    where: { id: note.id },
     data: {
-      title: input.title ?? note!.title,
-      folderId: input.folderId === undefined ? note!.folderId : input.folderId,
+      title: input.title ?? note.title,
+      folderId: input.folderId === undefined ? note.folderId : input.folderId,
       updatedById: userId,
     },
   });
@@ -63,7 +66,7 @@ export async function PATCH(req: Request, ctx: { params: { id: string } }) {
 
 export async function DELETE(_req: Request, ctx: { params: { id: string } }) {
   const userId = await requireUserId();
-  const { error } = await loadNoteAndAuthz(userId, ctx.params.id);
+  const { error } = await gate(userId, ctx.params.id, "OWNER");
   if (error) return error;
   await prisma.note.delete({ where: { id: ctx.params.id } });
   return new NextResponse(null, { status: 204 });
