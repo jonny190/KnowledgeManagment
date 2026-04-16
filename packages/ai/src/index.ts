@@ -10,7 +10,10 @@ export {
   updateNote,
   createFolder,
   setRecomputeHook,
+  setNoteAuthzHook,
+  __resetNoteAuthzHookForTests,
 } from "./tools";
+export type { NoteAuthzFn } from "./tools";
 export {
   applyAdminUpdate,
   computeAdminSignature,

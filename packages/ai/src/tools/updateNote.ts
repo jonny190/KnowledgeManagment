@@ -38,6 +38,15 @@ export const updateNote: AiTool<z.infer<typeof updateNoteArgs>, UpdateNoteResult
     if (note.vaultId !== ctx.vaultId) {
       throw new Error("updateNote: note is not in this vault");
     }
+    const { getNoteAuthzHook } = await import("./noteAuthzHook");
+    const hook = getNoteAuthzHook();
+    if (hook) {
+      try {
+        await hook(ctx.userId, note.id, "EDIT");
+      } catch {
+        return { error: "not_found" };
+      }
+    }
     await applyAdminUpdate({
       realtimeUrl: ctx.realtimeUrl,
       adminSecret: ctx.adminSecret,

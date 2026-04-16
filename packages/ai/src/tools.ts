@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { computeSnippet } from "@km/shared";
 import type { AiTool } from "./types";
+import { getNoteAuthzHook } from "./tools/noteAuthzHook";
 
 const readNoteArgs = z.object({ title: z.string().min(1).max(256) });
 
@@ -19,6 +20,14 @@ export const readNote: AiTool<z.infer<typeof readNoteArgs>, unknown> = {
       select: { id: true, title: true, content: true, updatedAt: true },
     });
     if (!note) return { error: "not_found" };
+    const hook = getNoteAuthzHook();
+    if (hook) {
+      try {
+        await hook(ctx.userId, note.id, "VIEW");
+      } catch {
+        return { error: "not_found" };
+      }
+    }
     return note;
   },
 };
@@ -94,6 +103,8 @@ export const listBacklinks: AiTool<z.infer<typeof listBacklinksArgs>, unknown[]>
 export { createNote, setRecomputeHook, __resetRecomputeHookForTests } from "./tools/createNote";
 export { createFolder } from "./tools/createFolder";
 export { updateNote } from "./tools/updateNote";
+export { setNoteAuthzHook, __resetNoteAuthzHookForTests, getNoteAuthzHook } from "./tools/noteAuthzHook";
+export type { NoteAuthzFn } from "./tools/noteAuthzHook";
 
 import { createNote as _createNote } from "./tools/createNote";
 import { createFolder as _createFolder } from "./tools/createFolder";
