@@ -4,6 +4,7 @@ import * as Y from "yjs";
 import { prisma } from "./prisma.js";
 import { verifyRealtimeToken, type RealtimeContext } from "./auth.js";
 import { snapshotNote, setDocProvider } from "./snapshot.js";
+import { handleAdminRequest, isAdminRequest } from "./admin-http.js";
 
 const debounceTimers = new Map<string, ReturnType<typeof setTimeout>>();
 const lastEditorByDoc = new Map<string, string>();
@@ -81,6 +82,25 @@ export async function startServer(port: number): Promise<Hocuspocus> {
     return { doc, lastEditorUserId: lastEditorByDoc.get(noteId) ?? null };
   });
 
+  // Wrap Hocuspocus's HTTP server so /internal/* is handled by the admin endpoint
+  // and all other requests (WS upgrade + default HTTP) flow through Hocuspocus.
+  const httpServer = (hocuspocus as unknown as { httpServer?: import("node:http").Server }).httpServer;
+  if (httpServer) {
+    const existing = httpServer.listeners("request").slice();
+    httpServer.removeAllListeners("request");
+    httpServer.on("request", (req, res) => {
+      if (isAdminRequest(req.url)) {
+        handleAdminRequest(req, res).catch((e) => {
+          // eslint-disable-next-line no-console
+          console.error("[admin-http] handler error:", e);
+          if (!res.headersSent) res.writeHead(500);
+          res.end();
+        });
+        return;
+      }
+      for (const l of existing) l.call(httpServer, req, res);
+    });
+  }
   await hocuspocus.listen();
   return hocuspocus;
 }
