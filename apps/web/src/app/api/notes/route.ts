@@ -40,6 +40,12 @@ export async function POST(req: Request) {
     slug = `${baseSlug}-${suffix}`;
   }
 
+  const vault = await prisma.vault.findUnique({
+    where: { id: input.vaultId },
+    select: { ownerType: true },
+  });
+  const visibility = vault?.ownerType === "USER" ? "PRIVATE" : "WORKSPACE";
+
   const now = new Date();
   const note = await prisma.note.create({
     data: {
@@ -49,6 +55,7 @@ export async function POST(req: Request) {
       slug,
       content: input.content ?? "",
       contentUpdatedAt: now,
+      visibility,
       createdById: userId,
       updatedById: userId,
     },

@@ -33,6 +33,37 @@ describe("POST /api/notes", () => {
     expect(body.note.createdById).toBe(user.id);
   });
 
+  it("forces PRIVATE visibility on personal-vault notes", async () => {
+    const { user, vault, rootFolder } = await createUser();
+    vi.mocked(requireUserId).mockResolvedValue(user.id);
+    const res = await createNote(
+      new Request("http://t/api/notes", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ vaultId: vault.id, folderId: rootFolder.id, title: "Personal" }),
+      })
+    );
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(body.note.visibility).toBe("PRIVATE");
+  });
+
+  it("leaves WORKSPACE default on workspace-vault notes", async () => {
+    const { user } = await createUser();
+    const { vault, rootFolder } = await createWorkspaceFixture(user.id);
+    vi.mocked(requireUserId).mockResolvedValue(user.id);
+    const res = await createNote(
+      new Request("http://t/api/notes", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ vaultId: vault.id, folderId: rootFolder.id, title: "Team" }),
+      })
+    );
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(body.note.visibility).toBe("WORKSPACE");
+  });
+
   it("rejects non-member on workspace vault", async () => {
     const { user: owner } = await createUser();
     const { vault } = await createWorkspaceFixture(owner.id);
