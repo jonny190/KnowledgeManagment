@@ -46,10 +46,14 @@ test("alice shares PRIVATE note with bob via API, carol is blocked, public link 
   await page.getByRole("button", { name: "Create" }).click();
   await page.waitForURL(/members/);
 
-  // Fetch alice's vault and create a note via API
+  // Fetch alice's WORKSPACE vault (not the auto-created personal one)
   const vaultsRes = await page.request.get("/api/vaults");
   const { vaults } = await vaultsRes.json();
-  const vaultId: string = vaults[0].id;
+  const workspaceVault = (vaults as Array<{ id: string; ownerType: string }>).find(
+    (v) => v.ownerType === "WORKSPACE",
+  );
+  expect(workspaceVault).toBeTruthy();
+  const vaultId: string = workspaceVault!.id;
 
   const treeRes = await page.request.get(`/api/vaults/${vaultId}/tree`);
   const { root } = await treeRes.json();
