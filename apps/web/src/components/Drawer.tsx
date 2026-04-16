@@ -20,8 +20,7 @@ export function Drawer({ open, onClose, side, title, children }: DrawerProps) {
       prevPathnameRef.current = pathname;
       if (open) onClose();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
+  }, [pathname]); // onClose intentionally excluded to avoid infinite loop
 
   // Escape key dismiss.
   useEffect(() => {
