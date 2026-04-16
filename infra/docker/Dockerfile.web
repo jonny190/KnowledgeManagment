@@ -3,6 +3,9 @@
 FROM node:20-bookworm-slim AS base
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
+# openssl + ca-certificates so Prisma's binary detector picks the
+# bookworm (openssl 3.0.x) query engine instead of falling back to 1.1.x.
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 RUN corepack enable && corepack prepare pnpm@9.12.3 --activate
 WORKDIR /repo
 
@@ -31,6 +34,14 @@ ENV PORT=3000
 ENV DATA_DIR=/data
 WORKDIR /app
 
+# openssl for the Prisma query engine at runtime.
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+
+# Prisma CLI installed globally so we can run `prisma migrate deploy` on
+# container start. Matches the @prisma/client version baked into the
+# standalone build.
+RUN npm install -g prisma@5.20.0
+
 RUN groupadd --system --gid 1001 app && useradd --system --uid 1001 --gid app app
 RUN mkdir -p /data && chown -R app:app /data
 
@@ -38,10 +49,6 @@ COPY --from=build --chown=app:app /repo/apps/web/.next/standalone ./
 COPY --from=build --chown=app:app /repo/apps/web/.next/static ./apps/web/.next/static
 COPY --from=build --chown=app:app /repo/apps/web/public ./apps/web/public
 COPY --from=build --chown=app:app /repo/packages/db/prisma ./packages/db/prisma
-# Prisma CLI + schema needed for migrate deploy at startup. Standalone already
-# includes @prisma/client but not the CLI; install a minimal copy into /app.
-COPY --from=build --chown=app:app /repo/node_modules/.pnpm/prisma@5.20.0 /app/node_modules/.pnpm/prisma@5.20.0
-COPY --from=build --chown=app:app /repo/node_modules/prisma /app/node_modules/prisma
 
 USER app
 EXPOSE 3000
@@ -49,4 +56,4 @@ VOLUME ["/data"]
 
 # Apply any pending Prisma migrations before starting the server. Safe to run
 # repeatedly; prisma migrate deploy is idempotent and no-ops when up to date.
-CMD ["sh", "-c", "node node_modules/prisma/build/index.js migrate deploy --schema=packages/db/prisma/schema.prisma && node apps/web/server.js"]
+CMD ["sh", "-c", "prisma migrate deploy --schema=packages/db/prisma/schema.prisma && node apps/web/server.js"]
