@@ -6,6 +6,7 @@ import { AiMessageView, type AiMessageBlock } from "./AiMessageView";
 export interface AiChatPanelProps {
   vaultId: string;
   noteId: string;
+  active: boolean;
   onApplyAtCursor?: (text: string) => void;
   registerCommandRunner?: (
     fn: (cmd: { command: string; selection: string; language?: string }) => void,
@@ -19,7 +20,6 @@ interface PersistedMessage {
 }
 
 export function AiChatPanel(props: AiChatPanelProps) {
-  const [open, setOpen] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<PersistedMessage[]>([]);
   const [draft, setDraft] = useState("");
@@ -30,7 +30,7 @@ export function AiChatPanel(props: AiChatPanelProps) {
   const streamingBlocksRef = useRef<AiMessageBlock[]>([]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!props.active) return;
     let cancelled = false;
     (async () => {
       const res = await fetch("/api/ai/conversations", {
@@ -52,7 +52,7 @@ export function AiChatPanel(props: AiChatPanelProps) {
     return () => {
       cancelled = true;
     };
-  }, [open, props.vaultId, props.noteId]);
+  }, [props.active, props.vaultId, props.noteId]);
 
   const handleEvent = useCallback((ev: ParsedSseEvent) => {
     const data = ev.data;
@@ -142,7 +142,6 @@ export function AiChatPanel(props: AiChatPanelProps) {
   useEffect(() => {
     if (!props.registerCommandRunner) return;
     props.registerCommandRunner(({ command, selection, language }) => {
-      setOpen(true);
       void send({
         url: "/api/ai/command",
         body: { conversationId, command, selection, language },
@@ -151,28 +150,13 @@ export function AiChatPanel(props: AiChatPanelProps) {
     });
   }, [props, conversationId, send]);
 
-  if (!open) {
-    return (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="fixed right-4 top-20 rounded bg-slate-900 px-3 py-1 text-sm text-white"
-      >
-        Open AI chat
-      </button>
-    );
-  }
-
   return (
-    <aside className="fixed right-0 top-16 flex h-[calc(100vh-4rem)] w-96 flex-col border-l border-slate-200 bg-slate-100">
+    <div className="flex h-full flex-col">
       <header className="flex items-center justify-between border-b border-slate-200 p-2 text-sm">
         <span>AI chat</span>
         <span className="text-xs text-slate-600">
           {usage.used} tokens used today
         </span>
-        <button type="button" onClick={() => setOpen(false)} className="text-xs underline">
-          close
-        </button>
       </header>
       <div className="flex-1 overflow-y-auto p-2">
         {messages.map((m) => (
@@ -221,6 +205,6 @@ export function AiChatPanel(props: AiChatPanelProps) {
           Send
         </button>
       </form>
-    </aside>
+    </div>
   );
 }
