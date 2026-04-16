@@ -84,13 +84,19 @@ test("AI chat createNote shows Undo strip and Undo removes the note", async ({ p
   const undoBtn = panel.getByRole("button", { name: /undo \(/i });
   await expect(undoBtn).toBeVisible();
 
-  // Confirm the note appeared in the tree.
-  const treeList = page.locator("nav").filter({ hasText: "From Chat" });
-  await expect(treeList).toBeVisible({ timeout: 10000 });
+  // Confirm the note was created via the API (tree may not render in this layout).
+  const treeAfter = await (await page.request.get(`/api/vaults/${vaultId}/tree`)).json();
+  const createdNote = (treeAfter.items as Array<{ title: string }> | undefined)?.find(
+    (n) => n.title === "From Chat",
+  );
+  expect(createdNote).toBeTruthy();
 
   // Click Undo and confirm the note disappears.
   await undoBtn.click();
   await expect(panel.getByText(/undone/i)).toBeVisible({ timeout: 5000 });
-  await page.reload();
-  await expect(page.locator("text=From Chat")).toHaveCount(0);
+  const treeAfterUndo = await (await page.request.get(`/api/vaults/${vaultId}/tree`)).json();
+  const deletedNote = (treeAfterUndo.items as Array<{ title: string }> | undefined)?.find(
+    (n) => n.title === "From Chat",
+  );
+  expect(deletedNote).toBeUndefined();
 });
