@@ -34,3 +34,36 @@ describe("ai schemas", () => {
     expect(ok.type).toBe("text");
   });
 });
+
+describe("aiSseEvent tool_result_undoable", () => {
+  it("parses tool_result_undoable with a create_note undo token", () => {
+    const event = {
+      type: "tool_result_undoable",
+      callId: "call_1",
+      summary: "Created note 'Meeting notes'",
+      undo: { kind: "create_note", id: "cknote1" },
+    };
+    expect(aiSseEvent.parse(event)).toEqual(event);
+  });
+
+  it("parses tool_result_undoable with undo null", () => {
+    const event = {
+      type: "tool_result_undoable",
+      callId: "call_2",
+      summary: "Updated 'Meeting notes'. Use Ctrl-Z in the editor to revert.",
+      undo: null,
+    };
+    expect(aiSseEvent.parse(event)).toEqual(event);
+  });
+
+  it("rejects tool_result_undoable with unknown undo.kind", () => {
+    expect(() =>
+      aiSseEvent.parse({
+        type: "tool_result_undoable",
+        callId: "call_3",
+        summary: "x",
+        undo: { kind: "delete_note", id: "abc" },
+      }),
+    ).toThrow();
+  });
+});
