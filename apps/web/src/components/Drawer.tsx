@@ -59,7 +59,7 @@ export function Drawer({ open, onClose, side, title, children }: DrawerProps) {
       <aside
         role="dialog"
         aria-label={title ?? "Drawer"}
-        className={`absolute ${sideClass} w-full sm:max-w-md bg-white dark:bg-slate-900 shadow-xl flex flex-col`}
+        className={`absolute ${sideClass} w-[85vw] sm:max-w-md bg-white dark:bg-slate-900 shadow-xl flex flex-col`}
       >
         {title ? (
           <header className="flex items-center justify-between border-b p-3">
