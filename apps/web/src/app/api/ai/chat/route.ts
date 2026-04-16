@@ -93,7 +93,17 @@ export async function POST(req: Request) {
   ];
 
   ensureRecomputeHook();
-  const provider = getProvider();
+  let providerOverride: ReturnType<typeof getProvider> | null = null;
+  if (process.env.AI_PROVIDER === "stub" && parsed.message.startsWith("__TEST__createNote:")) {
+    const args = JSON.parse(parsed.message.slice("__TEST__createNote:".length));
+    const { StubProvider } = await import("@km/ai");
+    providerOverride = new StubProvider({
+      mode: "tool-then-finish",
+      toolUse: { id: "call_test", name: "createNote", args },
+      finishText: "done",
+    });
+  }
+  const provider = providerOverride ?? getProvider();
   const controller = new AbortController();
   const encode = sseEncoder();
   let totalUsage = { inputTokens: 0, outputTokens: 0, cachedTokens: 0, model: provider.model };
