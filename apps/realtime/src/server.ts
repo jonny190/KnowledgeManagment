@@ -5,6 +5,7 @@ import { prisma } from "./prisma.js";
 import { verifyRealtimeToken, type RealtimeContext } from "./auth.js";
 import { snapshotNote, setDocProvider } from "./snapshot.js";
 import { handleAdminRequest, isAdminRequest } from "./admin-http.js";
+import { setAdminDocProvider } from "./admin.js";
 
 const debounceTimers = new Map<string, ReturnType<typeof setTimeout>>();
 const lastEditorByDoc = new Map<string, string>();
@@ -82,25 +83,70 @@ export async function startServer(port: number): Promise<Hocuspocus> {
     return { doc, lastEditorUserId: lastEditorByDoc.get(noteId) ?? null };
   });
 
-  // Wrap Hocuspocus's HTTP server so /internal/* is handled by the admin endpoint
-  // and all other requests (WS upgrade + default HTTP) flow through Hocuspocus.
-  const httpServer = (hocuspocus as unknown as { httpServer?: import("node:http").Server }).httpServer;
+  // Bridge the live in-memory Y.Doc into the admin write path.
+  // When a live Hocuspocus document exists, mutations are applied directly to
+  // it so Hocuspocus broadcasts the CRDT update to all connected clients.
+  // When no clients are connected we fall back to a transient doc + DB persist.
+  setAdminDocProvider(async (noteId) => {
+    const hDoc = hocuspocus.documents.get(noteId);
+    if (hDoc) {
+      const doc = hDoc as unknown as Y.Doc;
+      return {
+        doc,
+        lastEditorUserId: lastEditorByDoc.get(noteId) ?? null,
+        // Also write the updated state to the DB so the next cold-load
+        // reflects the admin change even before any client reconnects.
+        persist: async (state: Buffer) => {
+          await prisma.noteDoc.upsert({
+            where: { noteId },
+            update: { state, clock: { increment: 1 } },
+            create: { noteId, state, clock: 0 },
+          });
+        },
+      };
+    }
+    const row = await prisma.noteDoc.findUnique({ where: { noteId } });
+    const doc = new Y.Doc();
+    if (row) Y.applyUpdate(doc, row.state);
+    return {
+      doc,
+      lastEditorUserId: lastEditorByDoc.get(noteId) ?? null,
+      persist: async (state: Buffer) => {
+        await prisma.noteDoc.upsert({
+          where: { noteId },
+          update: { state, clock: { increment: 1 } },
+          create: { noteId, state, clock: 0 },
+        });
+      },
+    };
+  });
+
+  await hocuspocus.listen();
+
+  // After listen(), Hocuspocus has created its HTTP server. Intercept the
+  // request event so /internal/* is routed to the admin handler while all
+  // other requests (and WS upgrades) continue through Hocuspocus unchanged.
+  const httpServer = (hocuspocus as unknown as { server?: { httpServer?: import("node:http").Server } }).server?.httpServer;
   if (httpServer) {
-    const existing = httpServer.listeners("request").slice();
+    const existing = httpServer.listeners("request") as ((...args: unknown[]) => void)[];
     httpServer.removeAllListeners("request");
-    httpServer.on("request", (req, res) => {
+    httpServer.on("request", (req: import("node:http").IncomingMessage, res: import("node:http").ServerResponse) => {
       if (isAdminRequest(req.url)) {
         handleAdminRequest(req, res).catch((e) => {
           // eslint-disable-next-line no-console
           console.error("[admin-http] handler error:", e);
-          if (!res.headersSent) res.writeHead(500);
-          res.end();
+          if (!res.headersSent) {
+            res.writeHead(500);
+            res.end();
+          }
         });
         return;
       }
-      for (const l of existing) l.call(httpServer, req, res);
+      for (const l of existing) {
+        l(req, res);
+      }
     });
   }
-  await hocuspocus.listen();
+
   return hocuspocus;
 }

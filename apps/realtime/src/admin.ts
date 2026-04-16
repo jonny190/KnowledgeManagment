@@ -7,7 +7,7 @@ export interface AdminDocHandle {
   doc: Y.Doc;
   lastEditorUserId: string | null;
   /** Persist the updated state if the doc is transient (no live Hocuspocus clients). */
-  persist: (state: Uint8Array) => Promise<void>;
+  persist: (state: Buffer) => Promise<void>;
 }
 
 export type AdminDocProvider = (noteId: string) => Promise<AdminDocHandle>;
@@ -20,7 +20,7 @@ let provider: AdminDocProvider = async (noteId: string) => {
   return {
     doc,
     lastEditorUserId: null,
-    persist: async (state: Uint8Array) => {
+    persist: async (state: Buffer) => {
       await prisma.noteDoc.upsert({
         where: { noteId },
         update: { state, clock: { increment: 1 } },
@@ -74,7 +74,7 @@ export async function applyAdminUpdate(
       ytext.delete(0, ytext.length);
       ytext.insert(0, input.text);
     }
-    const state = Y.encodeStateAsUpdate(handle.doc);
+    const state = Buffer.from(Y.encodeStateAsUpdate(handle.doc));
     await handle.persist(state);
     // Best effort snapshot of Note.content; errors are logged inside snapshotNote.
     snapshotNote(input.noteId).catch((e) => {
