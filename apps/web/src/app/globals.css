@@ -7,3 +7,7 @@
 html, body { margin: 0; padding: 0; }
 body { font-family: system-ui, sans-serif; }
 a { color: #2563eb; }
+
+.cm-tooltip-autocomplete {
+  max-width: calc(100vw - 24px);
+}

@@ -89,6 +89,16 @@ export function NoteEditor(props: NoteEditorProps) {
         tagHighlight(),
         listener,
         dropHandler,
+        EditorView.theme({
+          "&": { fontSize: "16px" },
+          ".cm-scroller": { overflowAnchor: "none" },
+          ".cm-content": { padding: "12px 14px", caretColor: "currentColor" },
+        }),
+        EditorView.contentAttributes.of({
+          autocapitalize: "sentences",
+          autocorrect: "on",
+          spellcheck: "true",
+        }),
         EditorView.lineWrapping,
         ...(props.collab ? [props.collab] : []),
       ],
