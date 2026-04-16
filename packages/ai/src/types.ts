@@ -5,6 +5,10 @@ export interface AiToolContext {
   userId: string;
   vaultId: string;
   prisma: PrismaClient;
+  /** Base URL of the realtime service, e.g. "http://realtime:3001". */
+  realtimeUrl?: string;
+  /** HMAC secret shared with the realtime service. */
+  adminSecret?: string;
 }
 
 export interface AiTool<TArgs = unknown, TResult = unknown> {
