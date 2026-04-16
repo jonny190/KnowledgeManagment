@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { FileTreeItemMenu } from "./FileTreeItemMenu";
+import { usePointerType } from "@/hooks/usePointerType";
 
 export interface TreeItem {
   id: string;
@@ -40,10 +42,46 @@ interface Props {
   onRenameFolder: (id: string, currentName: string) => void;
   onDeleteFolder: (id: string) => void;
   onDropInto: (targetFolderId: string, kind: "folder" | "note", id: string) => void;
+  onRequestMove: (kind: "folder" | "note", id: string, label: string) => void;
+}
+
+function ThreeDotButton({
+  alwaysVisible,
+  onClick,
+  buttonRef,
+  label,
+}: {
+  alwaysVisible: boolean;
+  onClick: () => void;
+  buttonRef: React.RefObject<HTMLButtonElement>;
+  label: string;
+}) {
+  const baseClass =
+    "ml-auto rounded px-1 text-sm leading-none hover:bg-slate-100 dark:hover:bg-slate-800";
+  const visibilityClass = alwaysVisible
+    ? ""
+    : "opacity-0 group-hover:opacity-100 focus-within:opacity-100";
+  return (
+    <button
+      ref={buttonRef}
+      type="button"
+      aria-label={`Actions for ${label}`}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      className={`${baseClass} ${visibilityClass}`}
+    >
+      ...
+    </button>
+  );
 }
 
 export function FileTreeItem(p: Props) {
   const [open, setOpen] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const pointer = usePointerType();
+  const folderBtnRef = useRef<HTMLButtonElement | null>(null);
 
   const folderItems = (p.items ?? []).filter((item) => item.folderId === p.node.id);
 
@@ -59,7 +97,7 @@ export function FileTreeItem(p: Props) {
       }}
     >
       <div
-        className="flex items-center gap-1"
+        className="group relative flex items-center gap-1"
         draggable
         onDragStart={(e) => {
           e.dataTransfer.setData("kind", "folder");
@@ -67,19 +105,34 @@ export function FileTreeItem(p: Props) {
         }}
         onContextMenu={(e) => {
           e.preventDefault();
-          const choice = window.prompt(
-            "Action: new-folder | new-note | new-drawio | new-bpmn | rename | delete",
-          );
-          if (choice === "new-folder") p.onCreateFolder(p.node.id);
-          else if (choice === "new-note") p.onCreateNote(p.node.id);
-          else if (choice === "new-drawio") p.onCreateDrawio(p.node.id);
-          else if (choice === "new-bpmn") p.onCreateBpmn(p.node.id);
-          else if (choice === "rename") p.onRenameFolder(p.node.id, p.node.name);
-          else if (choice === "delete") p.onDeleteFolder(p.node.id);
+          setMenuOpen(true);
         }}
       >
         <button onClick={() => setOpen(!open)} className="w-4">{open ? "v" : ">"}</button>
         <span>{p.node.name === "" ? "(root)" : p.node.name}</span>
+        <ThreeDotButton
+          alwaysVisible={pointer === "touch"}
+          buttonRef={folderBtnRef}
+          label={p.node.name || "root"}
+          onClick={() => setMenuOpen((v) => !v)}
+        />
+        <FileTreeItemMenu
+          open={menuOpen}
+          onClose={() => setMenuOpen(false)}
+          anchorRef={folderBtnRef}
+          kind="folder"
+          onNewNote={() => p.onCreateNote(p.node.id)}
+          onNewFolder={() => p.onCreateFolder(p.node.id)}
+          onNewDrawio={() => p.onCreateDrawio(p.node.id)}
+          onNewBpmn={() => p.onCreateBpmn(p.node.id)}
+          onRename={() => p.onRenameFolder(p.node.id, p.node.name)}
+          onDelete={() => p.onDeleteFolder(p.node.id)}
+          onMove={
+            p.node.name === ""
+              ? undefined
+              : () => p.onRequestMove("folder", p.node.id, p.node.name)
+          }
+        />
       </div>
       {open && (
         <ul className="pl-4">
@@ -88,19 +141,13 @@ export function FileTreeItem(p: Props) {
           ))}
           {folderItems.length > 0
             ? folderItems.map((item) => (
-                <li
+                <ItemRow
                   key={item.id}
-                  draggable
-                  onDragStart={(e) => {
-                    e.dataTransfer.setData("kind", "note");
-                    e.dataTransfer.setData("id", item.id);
-                  }}
-                >
-                  <span style={{ marginRight: "0.25rem", fontSize: "0.75rem" }}>
-                    {itemIcon(item.kind)}
-                  </span>
-                  <Link href={itemHref(p.vaultId, item)}>{item.title}</Link>
-                </li>
+                  vaultId={p.vaultId}
+                  item={item}
+                  onRequestMove={p.onRequestMove}
+                  pointer={pointer}
+                />
               ))
             : p.node.notes.map((n) => (
                 <li
@@ -116,6 +163,49 @@ export function FileTreeItem(p: Props) {
               ))}
         </ul>
       )}
+    </li>
+  );
+}
+
+function ItemRow({
+  vaultId,
+  item,
+  onRequestMove,
+  pointer,
+}: {
+  vaultId: string;
+  item: TreeItem;
+  onRequestMove: (kind: "folder" | "note", id: string, label: string) => void;
+  pointer: "touch" | "mouse";
+}) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const btnRef = useRef<HTMLButtonElement | null>(null);
+  return (
+    <li
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.setData("kind", "note");
+        e.dataTransfer.setData("id", item.id);
+      }}
+      className="group relative flex items-center gap-1"
+    >
+      <span style={{ marginRight: "0.25rem", fontSize: "0.75rem" }}>
+        {itemIcon(item.kind)}
+      </span>
+      <Link href={itemHref(vaultId, item)} className="flex-1 truncate">{item.title}</Link>
+      <ThreeDotButton
+        alwaysVisible={pointer === "touch"}
+        buttonRef={btnRef}
+        label={item.title}
+        onClick={() => setMenuOpen((v) => !v)}
+      />
+      <FileTreeItemMenu
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        anchorRef={btnRef}
+        kind={item.kind}
+        onMove={() => onRequestMove("note", item.id, item.title)}
+      />
     </li>
   );
 }

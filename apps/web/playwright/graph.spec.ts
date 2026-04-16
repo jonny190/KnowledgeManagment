@@ -49,7 +49,7 @@ test("graph renders nodes and edges", async ({ page }) => {
 
   // 5. Type a wiki-link in note A to note B
   await page.goto(`/vault/${vaultId}/note/${noteAId}`);
-  await expect(page.locator("h1")).toHaveText("A", { timeout: 10000 });
+  await expect(page.locator('header h1')).toHaveText("A", { timeout: 10000 });
   const editorContent = page.locator(".cm-content");
   await editorContent.waitFor({ state: "visible", timeout: 10000 });
   await editorContent.click();

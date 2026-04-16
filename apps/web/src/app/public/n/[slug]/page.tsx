@@ -33,7 +33,7 @@ export default async function PublicNotePage({ params }: Props) {
   if (!link || link.revokedAt) notFound();
   if (link.expiresAt && link.expiresAt.getTime() <= Date.now()) {
     return (
-      <main style={{ maxWidth: 720, margin: "4rem auto", padding: "0 1rem" }}>
+      <main className="max-w-prose mx-auto px-4 py-16">
         <h1>Link expired</h1>
         <p>This shared link is no longer available.</p>
       </main>
@@ -41,7 +41,7 @@ export default async function PublicNotePage({ params }: Props) {
   }
   const html = await renderMarkdownToHtml(link.note.content);
   return (
-    <main style={{ maxWidth: 720, margin: "2rem auto", padding: "0 1rem" }}>
+    <main className="prose max-w-prose mx-auto px-4 py-6">
       <h1>{link.note.title}</h1>
       <article dangerouslySetInnerHTML={{ __html: html }} />
     </main>

@@ -52,7 +52,7 @@ test('create two notes, link B to A, see backlink, click to navigate', async ({ 
 
   // 7. Navigate to Beta's note page
   await page.goto(`/vault/${vaultId}/note/${betaId}`);
-  await expect(page.locator('h1')).toHaveText('Beta', { timeout: 10000 });
+  await expect(page.locator('header h1')).toHaveText('Beta', { timeout: 10000 });
   const betaUrl = page.url();
 
   // 8. Type content in Beta containing [[Alpha]]
@@ -81,7 +81,7 @@ test('create two notes, link B to A, see backlink, click to navigate', async ({ 
 
   // 10. Navigate to Alpha's note page
   await page.goto(`/vault/${vaultId}/note/${alphaId}`);
-  await expect(page.locator('h1')).toHaveText('Alpha');
+  await expect(page.locator('header h1')).toHaveText('Alpha');
 
   // 11. Wait for backlinks panel to show Beta
   const backlinks = page.getByTestId('backlinks-panel');
@@ -98,5 +98,5 @@ test('create two notes, link B to A, see backlink, click to navigate', async ({ 
   await expect(alphaToken).toBeVisible({ timeout: 5000 });
   await alphaToken.click({ modifiers: ['Control'] });
   // After navigating to Alpha, the h1 should change from "Beta" to "Alpha"
-  await expect(page.locator('h1')).toHaveText('Alpha', { timeout: 5000 });
+  await expect(page.locator('header h1')).toHaveText('Alpha', { timeout: 5000 });
 });

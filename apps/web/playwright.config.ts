@@ -38,5 +38,16 @@ export default defineConfig({
       },
     },
   ],
-  projects: [{ name: "chromium", use: { browserName: "chromium" } }],
+  projects: [
+    {
+      name: "chromium",
+      use: { browserName: "chromium" },
+      testIgnore: /responsive\.spec\.ts$/,
+    },
+    {
+      name: "chromium-mobile",
+      use: { browserName: "chromium", viewport: { width: 390, height: 844 } },
+      testMatch: /responsive\.spec\.ts$/,
+    },
+  ],
 });

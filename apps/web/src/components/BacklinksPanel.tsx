@@ -42,29 +42,29 @@ export function BacklinksPanel({
   }, [noteId, reloadKey]);
 
   return (
-    <aside
+    <div
       data-testid="backlinks-panel"
-      style={{ padding: '12px', borderLeft: '1px solid #d0d7de', width: '280px', overflowY: 'auto' }}
+      className="h-full overflow-auto p-3 text-sm"
     >
-      <h3 style={{ fontSize: '13px', textTransform: 'uppercase', color: '#57606a' }}>Backlinks</h3>
-      {error && <p style={{ color: '#cf222e' }}>{error}</p>}
+      <h3 className="text-xs font-semibold uppercase text-slate-500">Backlinks</h3>
+      {error && <p className="text-red-700">{error}</p>}
       {items === null && !error && <p>Loading...</p>}
-      {items && items.length === 0 && <p style={{ color: '#57606a' }}>No backlinks.</p>}
+      {items && items.length === 0 && <p className="text-slate-500">No backlinks.</p>}
       {items && items.length > 0 && (
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+        <ul className="mt-2 space-y-2">
           {items.map((b) => (
-            <li key={b.sourceNoteId} style={{ padding: '8px 0', borderBottom: '1px solid #eaeef2' }}>
+            <li key={b.sourceNoteId} className="border-b pb-2">
               <Link
                 href={`/vault/${vaultId}/note/${b.sourceNoteId}`}
-                style={{ fontWeight: 600 }}
+                className="font-semibold"
               >
                 {b.sourceTitle}
               </Link>
-              <div style={{ fontSize: '12px', color: '#57606a', marginTop: '4px' }}>{b.snippet}</div>
+              <div className="mt-1 text-xs text-slate-500">{b.snippet}</div>
             </li>
           ))}
         </ul>
       )}
-    </aside>
+    </div>
   );
 }

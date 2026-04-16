@@ -4,6 +4,7 @@ import { assertCanAccessVault, AuthzError } from "@/lib/authz";
 import { VaultSwitcher } from "@/components/VaultSwitcher";
 import { FileTree } from "@/components/FileTree";
 import { TagsSidebar } from "@/components/TagsSidebar";
+import { VaultHomeShell } from "@/components/VaultHomeShell";
 
 export default async function VaultShell({ params }: { params: { vaultId: string } }) {
   const userId = await getCurrentUserId();
@@ -15,13 +16,10 @@ export default async function VaultShell({ params }: { params: { vaultId: string
     throw e;
   }
   return (
-    <div className="grid grid-cols-[260px_1fr] h-screen">
-      <aside className="border-r p-3 space-y-3 overflow-auto">
-        <VaultSwitcher currentVaultId={params.vaultId} />
-        <FileTree vaultId={params.vaultId} />
-        <TagsSidebar />
-      </aside>
-      <section className="p-6 text-gray-500">Select or create a note.</section>
-    </div>
+    <VaultHomeShell vaultId={params.vaultId}>
+      <VaultSwitcher currentVaultId={params.vaultId} />
+      <FileTree vaultId={params.vaultId} />
+      <TagsSidebar />
+    </VaultHomeShell>
   );
 }

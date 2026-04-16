@@ -3,11 +3,18 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FileTreeItem, TreeNode, TreeItem } from "./FileTreeItem";
+import { MovePicker } from "./MovePicker";
+
+type PendingMove =
+  | { kind: "folder"; id: string; label: string }
+  | { kind: "note"; id: string; label: string }
+  | null;
 
 export function FileTree({ vaultId }: { vaultId: string }) {
   const router = useRouter();
   const [root, setRoot] = useState<TreeNode | null>(null);
   const [items, setItems] = useState<TreeItem[]>([]);
+  const [pendingMove, setPendingMove] = useState<PendingMove>(null);
 
   const reload = useCallback(async () => {
     const res = await fetch(`/api/vaults/${vaultId}/tree`);
@@ -110,21 +117,41 @@ export function FileTree({ vaultId }: { vaultId: string }) {
     await reload();
   }
 
+  function requestMove(kind: "folder" | "note", id: string, label: string) {
+    setPendingMove({ kind, id, label });
+  }
+
+  async function confirmMove(targetFolderId: string) {
+    if (!pendingMove) return;
+    await dropInto(targetFolderId, pendingMove.kind, pendingMove.id);
+    setPendingMove(null);
+  }
+
   if (!root) return <div>Loading tree...</div>;
   return (
-    <ul>
-      <FileTreeItem
+    <>
+      <ul>
+        <FileTreeItem
+          vaultId={vaultId}
+          node={root}
+          items={items}
+          onCreateFolder={createFolder}
+          onCreateNote={createNote}
+          onCreateDrawio={createDrawio}
+          onCreateBpmn={createBpmn}
+          onRenameFolder={renameFolder}
+          onDeleteFolder={deleteFolder}
+          onDropInto={dropInto}
+          onRequestMove={requestMove}
+        />
+      </ul>
+      <MovePicker
+        open={pendingMove !== null}
         vaultId={vaultId}
-        node={root}
-        items={items}
-        onCreateFolder={createFolder}
-        onCreateNote={createNote}
-        onCreateDrawio={createDrawio}
-        onCreateBpmn={createBpmn}
-        onRenameFolder={renameFolder}
-        onDeleteFolder={deleteFolder}
-        onDropInto={dropInto}
+        itemLabel={pendingMove?.label ?? ""}
+        onCancel={() => setPendingMove(null)}
+        onPick={confirmMove}
       />
-    </ul>
+    </>
   );
 }

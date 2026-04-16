@@ -98,63 +98,98 @@ export function NoteShareDialog({ noteId, canToggleVisibility, initialVisibility
   }
 
   return (
-    <div role="dialog" aria-label="Share note" className="share-dialog">
-      <button onClick={onClose} aria-label="Close">Close</button>
+    <div role="dialog" aria-label="Share note" className="fixed inset-0 z-50 flex items-start justify-center">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-md mx-4 my-8 rounded bg-white dark:bg-slate-900 p-4 shadow-xl">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-medium">Share note</h2>
+          <button onClick={onClose} aria-label="Close" className="text-sm underline">Close</button>
+        </div>
 
-      <h2>People with access</h2>
-      <ul>
-        {shares.map((s) => (
-          <li key={s.id}>
-            <span>{s.user.name ?? s.user.email}</span>
-            <select value={s.role} onChange={(e) => patchRole(s.userId, e.target.value as "VIEW" | "EDIT")}>
-              <option value="VIEW">View</option>
-              <option value="EDIT">Edit</option>
-            </select>
-            <button onClick={() => removeShare(s.userId)}>Remove</button>
-          </li>
-        ))}
-      </ul>
-
-      <div>
-        <input type="email" placeholder="name@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <select value={role} onChange={(e) => setRole(e.target.value as "VIEW" | "EDIT")}>
-          <option value="VIEW">View</option>
-          <option value="EDIT">Edit</option>
-        </select>
-        <button onClick={addShare} disabled={!email}>Share</button>
-        {status && <p role="status">{status}</p>}
-      </div>
-
-      {canToggleVisibility && (
-        <fieldset>
-          <legend>Visibility</legend>
-          <label>
-            <input type="radio" checked={visibility === "WORKSPACE"} onChange={() => flipVisibility("WORKSPACE")} />
-            Everyone in workspace
-          </label>
-          <label>
-            <input type="radio" checked={visibility === "PRIVATE"} onChange={() => flipVisibility("PRIVATE")} />
-            Only people I share with
-          </label>
-        </fieldset>
-      )}
-
-      <h3>Public link</h3>
-      {links.length === 0 ? (
-        <button onClick={createLink}>Create public link</button>
-      ) : (
-        <ul>
-          {links.map((l) => (
-            <li key={l.id}>
-              <code>{`${typeof window !== "undefined" ? window.location.origin : ""}/public/n/${l.slug}`}</code>
-              <button onClick={() => navigator.clipboard.writeText(`${window.location.origin}/public/n/${l.slug}`)}>
-                Copy
-              </button>
-              <button onClick={() => revokeLink(l.id)}>Revoke</button>
+        <h3 className="mb-1 text-xs font-semibold uppercase text-slate-500">People with access</h3>
+        <ul className="mb-3 space-y-1">
+          {shares.map((s) => (
+            <li key={s.id} className="flex flex-wrap items-center gap-2">
+              <span className="flex-1 truncate">{s.user.name ?? s.user.email}</span>
+              <select
+                className="rounded border px-1 py-0.5 text-sm"
+                value={s.role}
+                onChange={(e) => patchRole(s.userId, e.target.value as "VIEW" | "EDIT")}
+              >
+                <option value="VIEW">View</option>
+                <option value="EDIT">Edit</option>
+              </select>
+              <button className="text-sm underline" onClick={() => removeShare(s.userId)}>Remove</button>
             </li>
           ))}
         </ul>
-      )}
+
+        <div className="mb-3 flex flex-col gap-2 sm:flex-row">
+          <input
+            type="email"
+            placeholder="name@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="flex-1 rounded border px-2 py-1 text-sm"
+          />
+          <select
+            value={role}
+            onChange={(e) => setRole(e.target.value as "VIEW" | "EDIT")}
+            className="rounded border px-1 py-1 text-sm"
+          >
+            <option value="VIEW">View</option>
+            <option value="EDIT">Edit</option>
+          </select>
+          <button
+            onClick={addShare}
+            disabled={!email}
+            className="rounded bg-slate-900 px-3 py-1 text-sm text-white disabled:opacity-50"
+          >
+            Share
+          </button>
+        </div>
+        {status && <p role="status" className="mb-2 text-sm">{status}</p>}
+
+        {canToggleVisibility && (
+          <fieldset className="mb-3">
+            <legend className="text-xs font-semibold uppercase text-slate-500">Visibility</legend>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="radio" checked={visibility === "WORKSPACE"} onChange={() => flipVisibility("WORKSPACE")} />
+              Everyone in workspace
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="radio" checked={visibility === "PRIVATE"} onChange={() => flipVisibility("PRIVATE")} />
+              Only people I share with
+            </label>
+          </fieldset>
+        )}
+
+        <h3 className="mb-1 text-xs font-semibold uppercase text-slate-500">Public link</h3>
+        {links.length === 0 ? (
+          <button onClick={createLink} className="rounded border px-3 py-1 text-sm">Create public link</button>
+        ) : (
+          <ul className="space-y-2">
+            {links.map((l) => (
+              <li key={l.id} className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+                <code className="flex-1 break-all text-xs">
+                  {`${typeof window !== "undefined" ? window.location.origin : ""}/public/n/${l.slug}`}
+                </code>
+                <div className="flex gap-2">
+                  <button
+                    className="rounded border px-2 py-1 text-xs"
+                    onClick={() => navigator.clipboard.writeText(`${window.location.origin}/public/n/${l.slug}`)}
+                  >
+                    Copy
+                  </button>
+                  <button className="rounded border px-2 py-1 text-xs" onClick={() => revokeLink(l.id)}>
+                    Revoke
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }
